@@ -29,8 +29,8 @@ export function CaseForm({ case_item, onSubmit, onCancel }: CaseFormProps) {
   const [formData, setFormData] = useState({
     title: "",
     client: "",
-    status: "Open" as const,
-    priority: "Medium" as const,
+    status: "Open" as "Open" | "In Progress" | "Pending" | "Closed",
+    priority: "Medium" as "Low" | "Medium" | "High" | "Critical",
     assignedTo: "",
     dueDate: "",
     type: "",
