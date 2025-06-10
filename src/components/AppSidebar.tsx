@@ -27,12 +27,12 @@ import { Button } from "@/components/ui/button";
 const menuItems = [
   {
     title: "Dashboard",
-    url: "#",
+    url: "/",
     icon: Home,
   },
   {
     title: "Cases",
-    url: "#",
+    url: "/cases",
     icon: FileText,
   },
   {
