@@ -6,7 +6,8 @@ import {
   Calendar, 
   Settings,
   Search,
-  Plus
+  Plus,
+  Shield
 } from "lucide-react";
 
 import {
@@ -39,6 +40,11 @@ const menuItems = [
     title: "Users",
     url: "/users",
     icon: Users,
+  },
+  {
+    title: "Roles",
+    url: "/roles",
+    icon: Shield,
   },
   {
     title: "Calendar",
