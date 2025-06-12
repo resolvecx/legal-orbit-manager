@@ -1,10 +1,12 @@
+
 import { 
   Home, 
   FileText, 
   Users, 
   Settings,
   Plus,
-  Shield
+  Shield,
+  UserCheck
 } from "lucide-react";
 
 import {
@@ -37,6 +39,11 @@ const menuItems = [
     title: "Users",
     url: "/users",
     icon: Users,
+  },
+  {
+    title: "Customers",
+    url: "/customers",
+    icon: UserCheck,
   },
   {
     title: "Roles",
