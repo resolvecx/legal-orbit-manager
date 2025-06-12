@@ -36,8 +36,8 @@ const menuItems = [
     icon: FileText,
   },
   {
-    title: "Clients",
-    url: "#",
+    title: "Users",
+    url: "/users",
     icon: Users,
   },
   {
