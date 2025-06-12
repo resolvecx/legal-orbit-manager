@@ -32,7 +32,7 @@ const mockUsers: UserType[] = [
     id: "1",
     name: "John Smith",
     email: "john.smith@lawfirm.com",
-    role: "Admin",
+    roleId: "role-1", // Admin
     department: "Administration",
     phone: "+1 (555) 123-4567",
     status: "Active",
@@ -43,7 +43,7 @@ const mockUsers: UserType[] = [
     id: "2",
     name: "Sarah Johnson",
     email: "sarah.johnson@lawfirm.com",
-    role: "Lawyer",
+    roleId: "role-3", // Lawyer
     department: "Litigation",
     phone: "+1 (555) 234-5678",
     status: "Active",
@@ -54,7 +54,7 @@ const mockUsers: UserType[] = [
     id: "3",
     name: "Michael Davis",
     email: "michael.davis@lawfirm.com",
-    role: "Paralegal",
+    roleId: "role-4", // Paralegal
     department: "Corporate",
     phone: "+1 (555) 345-6789",
     status: "Active",
@@ -65,7 +65,7 @@ const mockUsers: UserType[] = [
     id: "4",
     name: "Emily Wilson",
     email: "emily.wilson@client.com",
-    role: "Client",
+    roleId: "role-5", // Client
     department: "External",
     status: "Active",
     createdDate: "2024-04-05",
@@ -74,7 +74,7 @@ const mockUsers: UserType[] = [
     id: "5",
     name: "Robert Brown",
     email: "robert.brown@lawfirm.com",
-    role: "Manager",
+    roleId: "role-2", // Manager
     department: "Operations",
     phone: "+1 (555) 456-7890",
     status: "Inactive",
@@ -82,6 +82,18 @@ const mockUsers: UserType[] = [
     lastLogin: "2024-05-15T14:20:00Z"
   }
 ];
+
+// Helper function to get role name from roleId
+const getRoleName = (roleId: string): string => {
+  const roleMap: Record<string, string> = {
+    "role-1": "Admin",
+    "role-2": "Manager",
+    "role-3": "Lawyer",
+    "role-4": "Paralegal",
+    "role-5": "Client"
+  };
+  return roleMap[roleId] || "Unknown";
+};
 
 const Users = () => {
   const [users, setUsers] = useState<UserType[]>(mockUsers);
@@ -91,10 +103,11 @@ const Users = () => {
   const [editingUser, setEditingUser] = useState<UserType | null>(null);
 
   const filteredUsers = users.filter(user => {
+    const roleName = getRoleName(user.roleId);
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.department.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = !roleFilter || user.role === roleFilter;
+    const matchesRole = !roleFilter || user.roleId === roleFilter;
     return matchesSearch && matchesRole;
   });
 
@@ -131,8 +144,9 @@ const Users = () => {
     setEditingUser(null);
   };
 
-  const getRoleColor = (role: UserType['role']) => {
-    switch (role) {
+  const getRoleColor = (roleId: string) => {
+    const roleName = getRoleName(roleId);
+    switch (roleName) {
       case "Admin": return "bg-purple-100 text-purple-800";
       case "Manager": return "bg-blue-100 text-blue-800";
       case "Lawyer": return "bg-green-100 text-green-800";
@@ -202,11 +216,11 @@ const Users = () => {
                         className="px-3 py-2 border rounded-md bg-background min-w-[120px]"
                       >
                         <option value="">All Roles</option>
-                        <option value="Admin">Admin</option>
-                        <option value="Manager">Manager</option>
-                        <option value="Lawyer">Lawyer</option>
-                        <option value="Paralegal">Paralegal</option>
-                        <option value="Client">Client</option>
+                        <option value="role-1">Admin</option>
+                        <option value="role-2">Manager</option>
+                        <option value="role-3">Lawyer</option>
+                        <option value="role-4">Paralegal</option>
+                        <option value="role-5">Client</option>
                       </select>
                     </div>
                   </CardContent>
@@ -247,8 +261,8 @@ const Users = () => {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge className={`${getRoleColor(user.role)} border-0`}>
-                                {user.role}
+                              <Badge className={`${getRoleColor(user.roleId)} border-0`}>
+                                {getRoleName(user.roleId)}
                               </Badge>
                             </TableCell>
                             <TableCell>{user.department}</TableCell>

@@ -17,7 +17,7 @@ export function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    role: "Paralegal" as "Admin" | "Manager" | "Lawyer" | "Paralegal" | "Client",
+    roleId: "role-4", // Default to Paralegal role
     department: "",
     phone: "",
     status: "Active" as "Active" | "Inactive",
@@ -29,7 +29,7 @@ export function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
       setFormData({
         name: user.name,
         email: user.email,
-        role: user.role,
+        roleId: user.roleId,
         department: user.department,
         phone: user.phone || "",
         status: user.status,
@@ -83,18 +83,18 @@ export function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
+                <Label htmlFor="roleId">Role</Label>
                 <select
-                  id="role"
-                  value={formData.role}
-                  onChange={(e) => handleInputChange("role", e.target.value)}
+                  id="roleId"
+                  value={formData.roleId}
+                  onChange={(e) => handleInputChange("roleId", e.target.value)}
                   className="w-full px-3 py-2 border rounded-md bg-background"
                 >
-                  <option value="Admin">Admin</option>
-                  <option value="Manager">Manager</option>
-                  <option value="Lawyer">Lawyer</option>
-                  <option value="Paralegal">Paralegal</option>
-                  <option value="Client">Client</option>
+                  <option value="role-1">Admin</option>
+                  <option value="role-2">Manager</option>
+                  <option value="role-3">Lawyer</option>
+                  <option value="role-4">Paralegal</option>
+                  <option value="role-5">Client</option>
                 </select>
               </div>
 
