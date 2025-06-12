@@ -1,11 +1,8 @@
-
 import { 
   Home, 
   FileText, 
   Users, 
-  Calendar, 
   Settings,
-  Search,
   Plus,
   Shield
 } from "lucide-react";
@@ -45,16 +42,6 @@ const menuItems = [
     title: "Roles",
     url: "/roles",
     icon: Shield,
-  },
-  {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
-  },
-  {
-    title: "Search",
-    url: "#",
-    icon: Search,
   },
 ];
 
