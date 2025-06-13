@@ -9,6 +9,7 @@ import Cases from "./pages/Cases";
 import Users from "./pages/Users";
 import Roles from "./pages/Roles";
 import Customers from "./pages/Customers";
+import Workspaces from "./pages/Workspaces";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

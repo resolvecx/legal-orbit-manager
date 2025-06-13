@@ -6,7 +6,8 @@ import {
   Shield,
   Plus,
   UserCheck,
-  Settings
+  Settings,
+  Building2
 } from "lucide-react";
 
 import {
@@ -43,6 +44,11 @@ const menuItems = [
     title: "Customers",
     url: "/customers",
     icon: UserCheck,
+  },
+  {
+    title: "Workspaces",
+    url: "/workspaces",
+    icon: Building2,
   },
   {
     title: "Roles",
