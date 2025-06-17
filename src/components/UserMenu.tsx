@@ -10,11 +10,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 
 const UserMenu = () => {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
@@ -23,7 +23,21 @@ const UserMenu = () => {
 
   if (!user) return null;
 
-  const userInitials = user.email?.substring(0, 2).toUpperCase() || 'U';
+  const userInitials = profile?.full_name?.substring(0, 2).toUpperCase() || 
+                      user.email?.substring(0, 2).toUpperCase() || 'U';
+
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case 'super_admin':
+        return 'text-red-600';
+      case 'admin':
+        return 'text-orange-600';
+      case 'manager':
+        return 'text-blue-600';
+      default:
+        return 'text-gray-600';
+    }
+  };
 
   return (
     <DropdownMenu>
@@ -34,10 +48,19 @@ const UserMenu = () => {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuContent className="w-64" align="end" forceMount>
         <div className="flex items-center justify-start gap-2 p-2">
           <div className="flex flex-col space-y-1 leading-none">
-            <p className="font-medium">{user.email}</p>
+            <p className="font-medium">{profile?.full_name || 'User'}</p>
+            <p className="text-sm text-muted-foreground">{user.email}</p>
+            {profile?.role && (
+              <div className="flex items-center gap-1">
+                <Shield className="h-3 w-3" />
+                <span className={`text-xs font-medium ${getRoleBadgeColor(profile.role)}`}>
+                  {profile.role.replace('_', ' ').toUpperCase()}
+                </span>
+              </div>
+            )}
           </div>
         </div>
         <DropdownMenuSeparator />
