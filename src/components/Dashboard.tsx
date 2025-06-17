@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { StatsCards } from "@/components/StatsCards";
 import { CasesList } from "@/components/CasesList";
+import UserMenu from "@/components/UserMenu";
 
 export function Dashboard() {
   return (
@@ -35,6 +36,7 @@ export function Dashboard() {
                 className="pl-8 w-64"
               />
             </div>
+            <UserMenu />
           </div>
         </div>
       </header>
