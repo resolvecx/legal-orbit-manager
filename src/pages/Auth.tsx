@@ -24,6 +24,7 @@ const Auth = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (user) {
+      console.log('User authenticated, redirecting to home');
       navigate('/');
     }
   }, [user, navigate]);
@@ -40,10 +41,14 @@ const Auth = () => {
     setLoading(true);
     setError('');
 
+    console.log('Attempting sign in with:', email);
+
     const { error } = await signIn(email, password);
     
     if (error) {
-      setError(error.message);
+      console.error('Sign in failed:', error);
+      setError(error.message || 'Failed to sign in');
+      toast.error(`Sign in failed: ${error.message}`);
     } else {
       toast.success('Successfully signed in!');
       navigate('/');
@@ -69,16 +74,26 @@ const Auth = () => {
       return;
     }
 
+    console.log('Attempting sign up with:', email);
+
     const { error } = await signUp(email, password, fullName);
     
     if (error) {
-      if (error.message.includes('already registered')) {
+      console.error('Sign up failed:', error);
+      if (error.message?.includes('already registered') || error.message?.includes('already exists')) {
         setError('An account with this email already exists. Please sign in instead.');
+        toast.error('Account already exists. Please sign in instead.');
       } else {
-        setError(error.message);
+        setError(error.message || 'Failed to create account');
+        toast.error(`Sign up failed: ${error.message}`);
       }
     } else {
-      toast.success('Account created successfully! Please check your email to verify your account.');
+      toast.success('Account created successfully! You can now sign in.');
+      // Clear form and switch to sign in tab
+      setEmail('');
+      setPassword('');
+      setFullName('');
+      setConfirmPassword('');
     }
     
     setLoading(false);
@@ -92,7 +107,9 @@ const Auth = () => {
     const { error } = await resetPassword(resetEmail);
     
     if (error) {
-      setError(error.message);
+      console.error('Password reset failed:', error);
+      setError(error.message || 'Failed to send reset email');
+      toast.error(`Password reset failed: ${error.message}`);
     } else {
       toast.success('Password reset email sent! Please check your inbox.');
       setResetEmail('');
@@ -184,6 +201,7 @@ const Auth = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
+                      minLength={6}
                     />
                   </div>
                   <div className="space-y-2">
