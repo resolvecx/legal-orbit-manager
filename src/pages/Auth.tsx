@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,7 +31,7 @@ const Auth = () => {
 
   // Pre-fill super admin credentials for demo
   const fillSuperAdminCredentials = () => {
-    setEmail('superadmin@gmail.com');
+    setEmail('shahzaib.codecones@gmail.com');
     setPassword('admin123456');
     toast.info('Super admin credentials filled');
   };
@@ -46,8 +47,13 @@ const Auth = () => {
     
     if (error) {
       console.error('Sign in failed:', error);
-      setError(error.message || 'Failed to sign in');
-      toast.error(`Sign in failed: ${error.message}`);
+      if (error.message?.includes('Email not confirmed')) {
+        setError('Please check your email and click the confirmation link before signing in.');
+        toast.error('Please confirm your email address first');
+      } else {
+        setError(error.message || 'Failed to sign in');
+        toast.error(`Sign in failed: ${error.message}`);
+      }
     } else {
       toast.success('Successfully signed in!');
       navigate('/');
@@ -265,7 +271,7 @@ const Auth = () => {
                 Fill Super Admin Credentials
               </Button>
               <p className="text-xs text-muted-foreground">
-                Email: superadmin@gmail.com | Password: admin123456
+                Email: shahzaib.codecones@gmail.com | Password: admin123456
               </p>
             </div>
           </CardContent>
