@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,8 +30,8 @@ const Auth = () => {
 
   // Pre-fill super admin credentials for demo
   const fillSuperAdminCredentials = () => {
-    setEmail('admin@example.com');
-    setPassword('admin123');
+    setEmail('superadmin@gmail.com');
+    setPassword('admin123456');
     toast.info('Super admin credentials filled');
   };
 
@@ -266,7 +265,7 @@ const Auth = () => {
                 Fill Super Admin Credentials
               </Button>
               <p className="text-xs text-muted-foreground">
-                Email: admin@example.com | Password: admin123
+                Email: superadmin@gmail.com | Password: admin123456
               </p>
             </div>
           </CardContent>
