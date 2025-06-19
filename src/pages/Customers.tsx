@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -9,6 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CustomerForm } from "@/components/CustomerForm";
 import { Customer } from "@/types/customer";
+import { SupabaseCustomer, CustomerFormData } from "@/types/supabase-customer";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   Plus, 
   Search, 
@@ -28,67 +31,72 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 
-const mockCustomers: Customer[] = [
-  {
-    id: "customer-1",
-    name: "Robert Johnson",
-    email: "robert.johnson@email.com",
-    phone: "(555) 123-4567",
-    company: "Johnson Enterprises",
-    address: "123 Main St",
-    city: "New York",
-    state: "NY",
-    zipCode: "10001",
-    status: "Active",
-    customerType: "Business",
-    assignedLawyer: "John Smith",
-    notes: "Regular client for business law matters",
-    createdDate: "2024-01-15",
-    lastContact: "2024-12-01"
-  },
-  {
-    id: "customer-2",
-    name: "Maria Garcia",
-    email: "maria.garcia@email.com",
-    phone: "(555) 234-5678",
-    company: "",
-    address: "456 Oak Ave",
-    city: "Los Angeles",
-    state: "CA",
-    zipCode: "90210",
-    status: "Active",
-    customerType: "Individual",
-    assignedLawyer: "Sarah Johnson",
-    notes: "Family law case - divorce proceedings",
-    createdDate: "2024-02-20",
-    lastContact: "2024-11-28"
-  },
-  {
-    id: "customer-3",
-    name: "Tech Solutions Inc",
-    email: "contact@techsolutions.com",
-    phone: "(555) 345-6789",
-    company: "Tech Solutions Inc",
-    address: "789 Innovation Dr",
-    city: "Austin",
-    state: "TX",
-    zipCode: "73301",
-    status: "Prospect",
-    customerType: "Business",
-    assignedLawyer: "Michael Davis",
-    notes: "Potential corporate restructuring client",
-    createdDate: "2024-03-10",
-    lastContact: "2024-12-05"
-  }
-];
-
 const Customers = () => {
-  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  const convertSupabaseToCustomer = (supabaseCustomer: SupabaseCustomer): Customer => ({
+    id: supabaseCustomer.id,
+    name: supabaseCustomer.name,
+    email: supabaseCustomer.email,
+    phone: supabaseCustomer.phone,
+    company: supabaseCustomer.company,
+    address: supabaseCustomer.address,
+    city: supabaseCustomer.city,
+    state: supabaseCustomer.state,
+    zipCode: supabaseCustomer.zip_code,
+    status: supabaseCustomer.status,
+    customerType: supabaseCustomer.customer_type,
+    assignedLawyer: supabaseCustomer.assigned_lawyer,
+    notes: supabaseCustomer.notes,
+    createdDate: supabaseCustomer.created_date,
+    lastContact: supabaseCustomer.last_contact
+  });
+
+  const fetchCustomers = async () => {
+    if (!user) return;
+    
+    try {
+      console.log('Fetching customers for user:', user.id);
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching customers:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch customers",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Fetched customers:', data);
+      const convertedCustomers = data.map(convertSupabaseToCustomer);
+      setCustomers(convertedCustomers);
+    } catch (error) {
+      console.error('Exception fetching customers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchCustomers();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -96,45 +104,145 @@ const Customers = () => {
     customer.company?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreateCustomer = (customerData: Omit<Customer, "id" | "createdDate">) => {
-    const newCustomer: Customer = {
-      ...customerData,
-      id: `customer-${Date.now()}`,
-      createdDate: new Date().toISOString().split('T')[0]
-    };
-    setCustomers([...customers, newCustomer]);
-    setIsFormOpen(false);
-    toast({
-      title: "Customer created",
-      description: "The customer has been successfully created.",
-    });
+  const handleCreateCustomer = async (customerData: Omit<Customer, "id" | "createdDate">) => {
+    if (!user) return;
+
+    try {
+      console.log('Creating customer:', customerData);
+      const supabaseData = {
+        user_id: user.id,
+        name: customerData.name,
+        email: customerData.email,
+        phone: customerData.phone || null,
+        company: customerData.company || null,
+        address: customerData.address || null,
+        city: customerData.city || null,
+        state: customerData.state || null,
+        zip_code: customerData.zipCode || null,
+        status: customerData.status,
+        customer_type: customerData.customerType,
+        assigned_lawyer: customerData.assignedLawyer || null,
+        notes: customerData.notes || null,
+        last_contact: customerData.lastContact || null
+      };
+
+      const { data, error } = await supabase
+        .from('customers')
+        .insert([supabaseData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating customer:', error);
+        toast({
+          title: "Error",
+          description: "Failed to create customer",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Created customer:', data);
+      const newCustomer = convertSupabaseToCustomer(data);
+      setCustomers([newCustomer, ...customers]);
+      setIsFormOpen(false);
+      toast({
+        title: "Customer created",
+        description: "The customer has been successfully created.",
+      });
+    } catch (error) {
+      console.error('Exception creating customer:', error);
+    }
   };
 
-  const handleUpdateCustomer = (customerData: Omit<Customer, "id" | "createdDate">) => {
-    if (!selectedCustomer) return;
+  const handleUpdateCustomer = async (customerData: Omit<Customer, "id" | "createdDate">) => {
+    if (!selectedCustomer || !user) return;
     
-    const updatedCustomers = customers.map(customer =>
-      customer.id === selectedCustomer.id
-        ? { ...customer, ...customerData }
-        : customer
-    );
-    setCustomers(updatedCustomers);
-    setSelectedCustomer(null);
-    setIsFormOpen(false);
-    setIsEditing(false);
-    toast({
-      title: "Customer updated",
-      description: "The customer has been successfully updated.",
-    });
+    try {
+      console.log('Updating customer:', selectedCustomer.id, customerData);
+      const supabaseData = {
+        name: customerData.name,
+        email: customerData.email,
+        phone: customerData.phone || null,
+        company: customerData.company || null,
+        address: customerData.address || null,
+        city: customerData.city || null,
+        state: customerData.state || null,
+        zip_code: customerData.zipCode || null,
+        status: customerData.status,
+        customer_type: customerData.customerType,
+        assigned_lawyer: customerData.assignedLawyer || null,
+        notes: customerData.notes || null,
+        last_contact: customerData.lastContact || null,
+        updated_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('customers')
+        .update(supabaseData)
+        .eq('id', selectedCustomer.id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating customer:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update customer",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Updated customer:', data);
+      const updatedCustomer = convertSupabaseToCustomer(data);
+      setCustomers(customers.map(customer =>
+        customer.id === selectedCustomer.id ? updatedCustomer : customer
+      ));
+      setSelectedCustomer(null);
+      setIsFormOpen(false);
+      setIsEditing(false);
+      toast({
+        title: "Customer updated",
+        description: "The customer has been successfully updated.",
+      });
+    } catch (error) {
+      console.error('Exception updating customer:', error);
+    }
   };
 
-  const handleDeleteCustomer = (customerId: string) => {
-    setCustomers(customers.filter(customer => customer.id !== customerId));
-    toast({
-      title: "Customer deleted",
-      description: "The customer has been successfully deleted.",
-      variant: "destructive",
-    });
+  const handleDeleteCustomer = async (customerId: string) => {
+    if (!user) return;
+
+    try {
+      console.log('Deleting customer:', customerId);
+      const { error } = await supabase
+        .from('customers')
+        .delete()
+        .eq('id', customerId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error deleting customer:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete customer",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Deleted customer:', customerId);
+      setCustomers(customers.filter(customer => customer.id !== customerId));
+      toast({
+        title: "Customer deleted",
+        description: "The customer has been successfully deleted.",
+        variant: "destructive",
+      });
+    } catch (error) {
+      console.error('Exception deleting customer:', error);
+    }
   };
 
   const handleEditClick = (customer: Customer) => {
@@ -161,6 +269,31 @@ const Customers = () => {
         return "secondary";
     }
   };
+
+  if (loading) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
+          <AppSidebar />
+          <main className="flex-1 overflow-hidden">
+            <div className="flex flex-col h-screen">
+              <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <div className="flex h-14 items-center gap-4 px-4">
+                  <SidebarTrigger className="-ml-1" />
+                  <div className="flex-1">
+                    <h1 className="text-lg font-semibold">Customer Profiles</h1>
+                  </div>
+                </div>
+              </header>
+              <div className="flex-1 flex items-center justify-center">
+                <p className="text-muted-foreground">Loading customers...</p>
+              </div>
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
+    );
+  }
 
   return (
     <SidebarProvider>
@@ -269,9 +402,11 @@ const Customers = () => {
                 ))}
               </div>
 
-              {filteredCustomers.length === 0 && (
+              {filteredCustomers.length === 0 && !loading && (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground">No customers found.</p>
+                  <p className="text-muted-foreground">
+                    {searchTerm ? 'No customers found matching your search.' : 'No customers found. Create your first customer!'}
+                  </p>
                 </div>
               )}
             </div>

@@ -9,6 +9,117 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      cases: {
+        Row: {
+          assigned_to: string
+          client: string
+          created_at: string
+          created_date: string
+          description: string | null
+          due_date: string
+          id: string
+          priority: string
+          status: string
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_to: string
+          client: string
+          created_at?: string
+          created_date?: string
+          description?: string | null
+          due_date: string
+          id: string
+          priority?: string
+          status?: string
+          title: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string
+          client?: string
+          created_at?: string
+          created_date?: string
+          description?: string | null
+          due_date?: string
+          id?: string
+          priority?: string
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      customers: {
+        Row: {
+          address: string | null
+          assigned_lawyer: string | null
+          city: string | null
+          company: string | null
+          created_at: string
+          created_date: string
+          customer_type: string
+          email: string
+          id: string
+          last_contact: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          state: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          assigned_lawyer?: string | null
+          city?: string | null
+          company?: string | null
+          created_at?: string
+          created_date?: string
+          customer_type?: string
+          email: string
+          id?: string
+          last_contact?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          state?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          assigned_lawyer?: string | null
+          city?: string | null
+          company?: string | null
+          created_at?: string
+          created_date?: string
+          customer_type?: string
+          email?: string
+          id?: string
+          last_contact?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          state?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null

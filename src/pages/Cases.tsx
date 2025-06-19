@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -11,6 +10,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search, Filter, Plus, Eye, Edit2, Trash2 } from "lucide-react";
 import { CaseForm } from "@/components/CaseForm";
 import { CaseDetails } from "@/components/CaseDetails";
+import { SupabaseCase } from "@/types/supabase-case";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface Case {
   id: string;
@@ -25,53 +28,69 @@ interface Case {
   description: string;
 }
 
-const mockCases: Case[] = [
-  {
-    id: "CASE-001",
-    title: "Contract Dispute Resolution",
-    client: "TechCorp Inc.",
-    status: "In Progress",
-    priority: "High",
-    assignedTo: "John Smith",
-    createdDate: "2024-01-15",
-    dueDate: "2024-02-15",
-    type: "Commercial",
-    description: "Client needs assistance with contract dispute regarding software licensing terms."
-  },
-  {
-    id: "CASE-002",
-    title: "Personal Injury Claim",
-    client: "Sarah Johnson",
-    status: "Open",
-    priority: "Medium",
-    assignedTo: "Emily Davis",
-    createdDate: "2024-01-20",
-    dueDate: "2024-03-01",
-    type: "Personal Injury",
-    description: "Motor vehicle accident claim requiring legal representation."
-  },
-  {
-    id: "CASE-003",
-    title: "Estate Planning",
-    client: "Michael Wilson",
-    status: "Closed",
-    priority: "Low",
-    assignedTo: "Robert Brown",
-    createdDate: "2024-01-10",
-    dueDate: "2024-01-25",
-    type: "Estate",
-    description: "Comprehensive estate planning including will and trust setup."
-  }
-];
-
 const Cases = () => {
-  const [cases, setCases] = useState<Case[]>(mockCases);
+  const [cases, setCases] = useState<Case[]>([]);
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCase, setEditingCase] = useState<Case | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [view, setView] = useState<"list" | "details">("list");
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const convertSupabaseToCase = (supabaseCase: SupabaseCase): Case => ({
+    id: supabaseCase.id,
+    title: supabaseCase.title,
+    client: supabaseCase.client,
+    status: supabaseCase.status,
+    priority: supabaseCase.priority,
+    assignedTo: supabaseCase.assigned_to,
+    createdDate: supabaseCase.created_date,
+    dueDate: supabaseCase.due_date,
+    type: supabaseCase.type,
+    description: supabaseCase.description || ''
+  });
+
+  const fetchCases = async () => {
+    if (!user) return;
+    
+    try {
+      console.log('Fetching cases for user:', user.id);
+      const { data, error } = await supabase
+        .from('cases')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching cases:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch cases",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Fetched cases:', data);
+      const convertedCases = data.map(convertSupabaseToCase);
+      setCases(convertedCases);
+    } catch (error) {
+      console.error('Exception fetching cases:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchCases();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -101,37 +120,173 @@ const Cases = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const handleCreateCase = (caseData: Omit<Case, "id" | "createdDate">) => {
-    const newCase: Case = {
-      ...caseData,
-      id: `CASE-${String(cases.length + 1).padStart(3, '0')}`,
-      createdDate: new Date().toISOString().split('T')[0]
-    };
-    setCases([...cases, newCase]);
-    setIsFormOpen(false);
+  const generateCaseId = () => {
+    const timestamp = Date.now().toString().slice(-6);
+    return `CASE-${timestamp}`;
   };
 
-  const handleEditCase = (caseData: Omit<Case, "id" | "createdDate">) => {
-    if (editingCase) {
-      const updatedCases = cases.map(c => 
-        c.id === editingCase.id 
-          ? { ...caseData, id: editingCase.id, createdDate: editingCase.createdDate }
-          : c
-      );
-      setCases(updatedCases);
-      setEditingCase(null);
+  const handleCreateCase = async (caseData: Omit<Case, "id" | "createdDate">) => {
+    if (!user) return;
+
+    try {
+      const caseId = generateCaseId();
+      console.log('Creating case:', caseId, caseData);
+      
+      const supabaseData = {
+        id: caseId,
+        user_id: user.id,
+        title: caseData.title,
+        client: caseData.client,
+        status: caseData.status,
+        priority: caseData.priority,
+        assigned_to: caseData.assignedTo,
+        due_date: caseData.dueDate,
+        type: caseData.type,
+        description: caseData.description || null
+      };
+
+      const { data, error } = await supabase
+        .from('cases')
+        .insert([supabaseData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating case:', error);
+        toast({
+          title: "Error",
+          description: "Failed to create case",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Created case:', data);
+      const newCase = convertSupabaseToCase(data);
+      setCases([newCase, ...cases]);
       setIsFormOpen(false);
+      toast({
+        title: "Case created",
+        description: "The case has been successfully created.",
+      });
+    } catch (error) {
+      console.error('Exception creating case:', error);
     }
   };
 
-  const handleDeleteCase = (caseId: string) => {
-    setCases(cases.filter(c => c.id !== caseId));
+  const handleEditCase = async (caseData: Omit<Case, "id" | "createdDate">) => {
+    if (!editingCase || !user) return;
+    
+    try {
+      console.log('Updating case:', editingCase.id, caseData);
+      const supabaseData = {
+        title: caseData.title,
+        client: caseData.client,
+        status: caseData.status,
+        priority: caseData.priority,
+        assigned_to: caseData.assignedTo,
+        due_date: caseData.dueDate,
+        type: caseData.type,
+        description: caseData.description || null,
+        updated_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('cases')
+        .update(supabaseData)
+        .eq('id', editingCase.id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating case:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update case",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Updated case:', data);
+      const updatedCase = convertSupabaseToCase(data);
+      setCases(cases.map(c => 
+        c.id === editingCase.id ? updatedCase : c
+      ));
+      setEditingCase(null);
+      setIsFormOpen(false);
+      toast({
+        title: "Case updated",
+        description: "The case has been successfully updated.",
+      });
+    } catch (error) {
+      console.error('Exception updating case:', error);
+    }
+  };
+
+  const handleDeleteCase = async (caseId: string) => {
+    if (!user) return;
+
+    try {
+      console.log('Deleting case:', caseId);
+      const { error } = await supabase
+        .from('cases')
+        .delete()
+        .eq('id', caseId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error deleting case:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete case",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Deleted case:', caseId);
+      setCases(cases.filter(c => c.id !== caseId));
+      toast({
+        title: "Case deleted",
+        description: "The case has been successfully deleted.",
+        variant: "destructive",
+      });
+    } catch (error) {
+      console.error('Exception deleting case:', error);
+    }
   };
 
   const handleViewCase = (case_item: Case) => {
     setSelectedCase(case_item);
     setView("details");
   };
+
+  if (loading) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
+          <AppSidebar />
+          <main className="flex-1 overflow-hidden">
+            <div className="flex flex-col h-screen">
+              <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <div className="flex h-14 items-center gap-4 px-4">
+                  <SidebarTrigger className="-ml-1" />
+                  <div className="flex-1">
+                    <h1 className="text-lg font-semibold">Cases Management</h1>
+                  </div>
+                </div>   
+              </header>
+              <div className="flex-1 flex items-center justify-center">
+                <p className="text-muted-foreground">Loading cases...</p>
+              </div>
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
+    );
+  }
 
   if (view === "details" && selectedCase) {
     return (
@@ -274,6 +429,16 @@ const Cases = () => {
                       ))}
                     </TableBody>
                   </Table>
+
+                  {filteredCases.length === 0 && (
+                    <div className="text-center py-12">
+                      <p className="text-muted-foreground">
+                        {searchTerm || statusFilter !== "All" 
+                          ? 'No cases found matching your filters.' 
+                          : 'No cases found. Create your first case!'}
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
