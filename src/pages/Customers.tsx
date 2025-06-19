@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -41,7 +40,7 @@ const Customers = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const convertSupabaseToCustomer = (supabaseCustomer: SupabaseCustomer): Customer => ({
+  const convertSupabaseToCustomer = (supabaseCustomer: any): Customer => ({
     id: supabaseCustomer.id,
     name: supabaseCustomer.name,
     email: supabaseCustomer.email,
@@ -51,8 +50,8 @@ const Customers = () => {
     city: supabaseCustomer.city,
     state: supabaseCustomer.state,
     zipCode: supabaseCustomer.zip_code,
-    status: supabaseCustomer.status,
-    customerType: supabaseCustomer.customer_type,
+    status: supabaseCustomer.status as 'Active' | 'Inactive' | 'Prospect',
+    customerType: supabaseCustomer.customer_type as 'Individual' | 'Business',
     assignedLawyer: supabaseCustomer.assigned_lawyer,
     notes: supabaseCustomer.notes,
     createdDate: supabaseCustomer.created_date,

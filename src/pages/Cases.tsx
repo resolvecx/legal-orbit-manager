@@ -40,12 +40,12 @@ const Cases = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const convertSupabaseToCase = (supabaseCase: SupabaseCase): Case => ({
+  const convertSupabaseToCase = (supabaseCase: any): Case => ({
     id: supabaseCase.id,
     title: supabaseCase.title,
     client: supabaseCase.client,
-    status: supabaseCase.status,
-    priority: supabaseCase.priority,
+    status: supabaseCase.status as "Open" | "In Progress" | "Pending" | "Closed",
+    priority: supabaseCase.priority as "Low" | "Medium" | "High" | "Critical",
     assignedTo: supabaseCase.assigned_to,
     createdDate: supabaseCase.created_date,
     dueDate: supabaseCase.due_date,
