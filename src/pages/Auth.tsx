@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -138,15 +137,11 @@ const Auth = () => {
       
       {/* Resolve CX Logo */}
       <div className="absolute top-8 left-8 z-10">
-        <div className="flex items-center space-x-2">
-          <span className="text-2xl font-bold text-gray-800">Resolve</span>
-          <div className="flex items-center">
-            <span className="text-2xl font-bold text-blue-500">C</span>
-            <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-bold">X</span>
-            </div>
-          </div>
-        </div>
+        <img 
+          src="/lovable-uploads/2e008ad1-54b3-4fdf-bab6-847f0547aae2.png" 
+          alt="Resolve CX" 
+          className="h-8"
+        />
       </div>
 
       {/* Success notification */}
