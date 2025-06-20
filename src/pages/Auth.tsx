@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -129,11 +130,13 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* Blue gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-blue-100 to-blue-600"></div>
-      
-      {/* Large blue circle decoration */}
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500 rounded-full transform translate-x-48 translate-y-48"></div>
+      {/* Background image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: 'url(/lovable-uploads/841b868b-d8ab-4468-a404-6f15ec26422a.png)'
+        }}
+      ></div>
       
       {/* Resolve CX Logo */}
       <div className="absolute top-8 left-8 z-10">
