@@ -25,84 +25,11 @@ import {
 } from "@/components/ui/table";
 import { RoleForm } from "@/components/RoleForm";
 import { Role, RolePermissions } from "@/types/role";
-
-const mockRoles: Role[] = [
-  {
-    id: "1",
-    name: "Admin",
-    description: "Full system access with all permissions",
-    permissions: {
-      canCreateCases: true,
-      canEditAllCases: true,
-      canDeleteCases: true,
-      canViewAllCases: true,
-      canManageUsers: true,
-      canViewReports: true,
-      canManageSettings: true,
-      canManageRoles: true,
-    },
-    isSystemRole: true,
-    createdDate: "2024-01-15",
-    updatedDate: "2024-01-15"
-  },
-  {
-    id: "2",
-    name: "Manager",
-    description: "Management level access with user and case oversight",
-    permissions: {
-      canCreateCases: true,
-      canEditAllCases: true,
-      canDeleteCases: true,
-      canViewAllCases: true,
-      canManageUsers: true,
-      canViewReports: true,
-      canManageSettings: false,
-      canManageRoles: false,
-    },
-    isSystemRole: true,
-    createdDate: "2024-01-15",
-    updatedDate: "2024-01-15"
-  },
-  {
-    id: "3",
-    name: "Lawyer",
-    description: "Legal professional with case management access",
-    permissions: {
-      canCreateCases: true,
-      canEditAllCases: false,
-      canDeleteCases: false,
-      canViewAllCases: true,
-      canManageUsers: false,
-      canViewReports: true,
-      canManageSettings: false,
-      canManageRoles: false,
-    },
-    isSystemRole: true,
-    createdDate: "2024-01-15",
-    updatedDate: "2024-01-15"
-  },
-  {
-    id: "4",
-    name: "Custom Role",
-    description: "Custom role with specific permissions",
-    permissions: {
-      canCreateCases: true,
-      canEditAllCases: false,
-      canDeleteCases: false,
-      canViewAllCases: false,
-      canManageUsers: false,
-      canViewReports: true,
-      canManageSettings: false,
-      canManageRoles: false,
-    },
-    isSystemRole: false,
-    createdDate: "2024-02-10",
-    updatedDate: "2024-02-10"
-  }
-];
+import { useRoles } from "@/hooks/useRoles";
+import { toast } from "sonner";
 
 const Roles = () => {
-  const [roles, setRoles] = useState<Role[]>(mockRoles);
+  const { roles, loading, error, createRole, updateRole, deleteRole } = useRoles();
   const [searchTerm, setSearchTerm] = useState("");
   const [showRoleForm, setShowRoleForm] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
@@ -122,43 +49,99 @@ const Roles = () => {
     setShowRoleForm(true);
   };
 
-  const handleDeleteRole = (roleId: string) => {
+  const handleDeleteRole = async (roleId: string) => {
     const role = roles.find(r => r.id === roleId);
     if (role?.isSystemRole) {
-      alert("System roles cannot be deleted");
+      toast.error("System roles cannot be deleted");
       return;
     }
-    setRoles(roles.filter(role => role.id !== roleId));
+
+    const result = await deleteRole(roleId);
+    if (result.success) {
+      toast.success("Role deleted successfully");
+    } else {
+      toast.error(result.error || "Failed to delete role");
+    }
   };
 
-  const handleSubmitRole = (roleData: Omit<Role, "id" | "createdDate" | "updatedDate">) => {
+  const handleSubmitRole = async (roleData: Omit<Role, "id" | "createdDate" | "updatedDate">) => {
+    let result;
+    
     if (editingRole) {
-      setRoles(roles.map(role => 
-        role.id === editingRole.id 
-          ? { 
-              ...roleData, 
-              id: editingRole.id, 
-              createdDate: editingRole.createdDate,
-              updatedDate: new Date().toISOString().split('T')[0]
-            }
-          : role
-      ));
+      result = await updateRole(editingRole.id, roleData);
+      if (result.success) {
+        toast.success("Role updated successfully");
+      } else {
+        toast.error(result.error || "Failed to update role");
+      }
     } else {
-      const newRole: Role = {
-        ...roleData,
-        id: Math.random().toString(36).substr(2, 9),
-        createdDate: new Date().toISOString().split('T')[0],
-        updatedDate: new Date().toISOString().split('T')[0]
-      };
-      setRoles([...roles, newRole]);
+      result = await createRole(roleData);
+      if (result.success) {
+        toast.success("Role created successfully");
+      } else {
+        toast.error(result.error || "Failed to create role");
+      }
     }
-    setShowRoleForm(false);
-    setEditingRole(null);
+
+    if (result.success) {
+      setShowRoleForm(false);
+      setEditingRole(null);
+    }
   };
 
   const getPermissionCount = (permissions: RolePermissions) => {
     return Object.values(permissions).filter(Boolean).length;
   };
+
+  if (loading) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
+          <AppSidebar />
+          <main className="flex-1 overflow-hidden">
+            <div className="flex flex-col h-screen">
+              <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <div className="flex h-14 items-center gap-4 px-4">
+                  <SidebarTrigger className="-ml-1" />
+                  <div className="flex-1">
+                    <h1 className="text-lg font-semibold">Role Management</h1>
+                  </div>
+                </div>
+              </header>
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-lg">Loading roles...</div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
+    );
+  }
+
+  if (error) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
+          <AppSidebar />
+          <main className="flex-1 overflow-hidden">
+            <div className="flex flex-col h-screen">
+              <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <div className="flex h-14 items-center gap-4 px-4">
+                  <SidebarTrigger className="-ml-1" />
+                  <div className="flex-1">
+                    <h1 className="text-lg font-semibold">Role Management</h1>
+                  </div>
+                </div>
+              </header>
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-lg text-red-600">Error: {error}</div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
+    );
+  }
 
   return (
     <SidebarProvider>

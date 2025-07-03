@@ -6,18 +6,20 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { X } from "lucide-react";
 import { User } from "@/types/user";
+import { Role } from "@/types/role";
 
 interface UserFormProps {
   user?: User | null;
+  roles: Role[];
   onSubmit: (userData: Omit<User, "id" | "createdDate">) => void;
   onCancel: () => void;
 }
 
-export function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
+export function UserForm({ user, roles, onSubmit, onCancel }: UserFormProps) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    roleId: "role-4", // Default to Paralegal role
+    roleId: roles.find(r => r.name === "Paralegal")?.id || roles[0]?.id || "",
     department: "",
     phone: "",
     status: "Active" as "Active" | "Inactive",
@@ -90,11 +92,9 @@ export function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
                   onChange={(e) => handleInputChange("roleId", e.target.value)}
                   className="w-full px-3 py-2 border rounded-md bg-background"
                 >
-                  <option value="role-1">Admin</option>
-                  <option value="role-2">Manager</option>
-                  <option value="role-3">Lawyer</option>
-                  <option value="role-4">Paralegal</option>
-                  <option value="role-5">Client</option>
+                  {roles.map(role => (
+                    <option key={role.id} value={role.id}>{role.name}</option>
+                  ))}
                 </select>
               </div>
 

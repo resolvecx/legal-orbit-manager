@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -9,12 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { 
   Search, 
-  Filter, 
   Plus, 
   Edit, 
   Trash2, 
-  User,
-  MoreHorizontal
+  User
 } from "lucide-react";
 import {
   Table,
@@ -26,81 +24,23 @@ import {
 } from "@/components/ui/table";
 import { UserForm } from "@/components/UserForm";
 import { User as UserType } from "@/types/user";
-
-const mockUsers: UserType[] = [
-  {
-    id: "1",
-    name: "John Smith",
-    email: "john.smith@lawfirm.com",
-    roleId: "role-1", // Admin
-    department: "Administration",
-    phone: "+1 (555) 123-4567",
-    status: "Active",
-    createdDate: "2024-01-15",
-    lastLogin: "2024-06-11T10:30:00Z"
-  },
-  {
-    id: "2",
-    name: "Sarah Johnson",
-    email: "sarah.johnson@lawfirm.com",
-    roleId: "role-3", // Lawyer
-    department: "Litigation",
-    phone: "+1 (555) 234-5678",
-    status: "Active",
-    createdDate: "2024-02-01",
-    lastLogin: "2024-06-11T09:15:00Z"
-  },
-  {
-    id: "3",
-    name: "Michael Davis",
-    email: "michael.davis@lawfirm.com",
-    roleId: "role-4", // Paralegal
-    department: "Corporate",
-    phone: "+1 (555) 345-6789",
-    status: "Active",
-    createdDate: "2024-03-10",
-    lastLogin: "2024-06-10T16:45:00Z"
-  },
-  {
-    id: "4",
-    name: "Emily Wilson",
-    email: "emily.wilson@client.com",
-    roleId: "role-5", // Client
-    department: "External",
-    status: "Active",
-    createdDate: "2024-04-05",
-  },
-  {
-    id: "5",
-    name: "Robert Brown",
-    email: "robert.brown@lawfirm.com",
-    roleId: "role-2", // Manager
-    department: "Operations",
-    phone: "+1 (555) 456-7890",
-    status: "Inactive",
-    createdDate: "2024-01-20",
-    lastLogin: "2024-05-15T14:20:00Z"
-  }
-];
-
-// Helper function to get role name from roleId
-const getRoleName = (roleId: string): string => {
-  const roleMap: Record<string, string> = {
-    "role-1": "Admin",
-    "role-2": "Manager",
-    "role-3": "Lawyer",
-    "role-4": "Paralegal",
-    "role-5": "Client"
-  };
-  return roleMap[roleId] || "Unknown";
-};
+import { useUsers } from "@/hooks/useUsers";
+import { useRoles } from "@/hooks/useRoles";
+import { toast } from "sonner";
 
 const Users = () => {
-  const [users, setUsers] = useState<UserType[]>(mockUsers);
+  const { users, loading: usersLoading, error: usersError, createUser, updateUser, deleteUser } = useUsers();
+  const { roles, loading: rolesLoading } = useRoles();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [showUserForm, setShowUserForm] = useState(false);
   const [editingUser, setEditingUser] = useState<UserType | null>(null);
+
+  // Helper function to get role name from roleId
+  const getRoleName = (roleId: string): string => {
+    const role = roles.find(r => r.id === roleId);
+    return role?.name || "Unknown";
+  };
 
   const filteredUsers = users.filter(user => {
     const roleName = getRoleName(user.roleId);
@@ -121,27 +61,38 @@ const Users = () => {
     setShowUserForm(true);
   };
 
-  const handleDeleteUser = (userId: string) => {
-    setUsers(users.filter(user => user.id !== userId));
+  const handleDeleteUser = async (userId: string) => {
+    const result = await deleteUser(userId);
+    if (result.success) {
+      toast.success("User deleted successfully");
+    } else {
+      toast.error(result.error || "Failed to delete user");
+    }
   };
 
-  const handleSubmitUser = (userData: Omit<UserType, "id" | "createdDate">) => {
+  const handleSubmitUser = async (userData: Omit<UserType, "id" | "createdDate">) => {
+    let result;
+    
     if (editingUser) {
-      setUsers(users.map(user => 
-        user.id === editingUser.id 
-          ? { ...userData, id: editingUser.id, createdDate: editingUser.createdDate }
-          : user
-      ));
+      result = await updateUser(editingUser.id, userData);
+      if (result.success) {
+        toast.success("User updated successfully");
+      } else {
+        toast.error(result.error || "Failed to update user");
+      }
     } else {
-      const newUser: UserType = {
-        ...userData,
-        id: Math.random().toString(36).substr(2, 9),
-        createdDate: new Date().toISOString().split('T')[0]
-      };
-      setUsers([...users, newUser]);
+      result = await createUser(userData);
+      if (result.success) {
+        toast.success("User created successfully");
+      } else {
+        toast.error(result.error || "Failed to create user");
+      }
     }
-    setShowUserForm(false);
-    setEditingUser(null);
+
+    if (result.success) {
+      setShowUserForm(false);
+      setEditingUser(null);
+    }
   };
 
   const getRoleColor = (roleId: string) => {
@@ -161,6 +112,56 @@ const Users = () => {
       ? "bg-green-100 text-green-800" 
       : "bg-red-100 text-red-800";
   };
+
+  if (usersLoading || rolesLoading) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
+          <AppSidebar />
+          <main className="flex-1 overflow-hidden">
+            <div className="flex flex-col h-screen">
+              <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <div className="flex h-14 items-center gap-4 px-4">
+                  <SidebarTrigger className="-ml-1" />
+                  <div className="flex-1">
+                    <h1 className="text-lg font-semibold">User Management</h1>
+                  </div>
+                </div>
+              </header>
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-lg">Loading users...</div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
+    );
+  }
+
+  if (usersError) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
+          <AppSidebar />
+          <main className="flex-1 overflow-hidden">
+            <div className="flex flex-col h-screen">
+              <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <div className="flex h-14 items-center gap-4 px-4">
+                  <SidebarTrigger className="-ml-1" />
+                  <div className="flex-1">
+                    <h1 className="text-lg font-semibent">User Management</h1>
+                  </div>
+                </div>
+              </header>
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-lg text-red-600">Error: {usersError}</div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
+    );
+  }
 
   return (
     <SidebarProvider>
@@ -216,11 +217,9 @@ const Users = () => {
                         className="px-3 py-2 border rounded-md bg-background min-w-[120px]"
                       >
                         <option value="">All Roles</option>
-                        <option value="role-1">Admin</option>
-                        <option value="role-2">Manager</option>
-                        <option value="role-3">Lawyer</option>
-                        <option value="role-4">Paralegal</option>
-                        <option value="role-5">Client</option>
+                        {roles.map(role => (
+                          <option key={role.id} value={role.id}>{role.name}</option>
+                        ))}
                       </select>
                     </div>
                   </CardContent>
@@ -309,6 +308,7 @@ const Users = () => {
         {showUserForm && (
           <UserForm
             user={editingUser}
+            roles={roles}
             onSubmit={handleSubmitUser}
             onCancel={() => {
               setShowUserForm(false);
