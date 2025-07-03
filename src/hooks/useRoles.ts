@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Role } from '@/types/role';
+import { Role, defaultPermissions } from '@/types/role';
 
 export function useRoles() {
   const [roles, setRoles] = useState<Role[]>([]);
@@ -11,35 +11,77 @@ export function useRoles() {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      // Use raw query since roles table is not in generated types yet
+      // Direct query to roles table
       const { data, error } = await supabase
-        .rpc('get_roles_data');
+        .from('roles' as any)
+        .select('*')
+        .order('created_at', { ascending: true });
 
       if (error) {
-        // Fallback to direct query if RPC doesn't exist
-        const { data: rolesData, error: directError } = await supabase
-          .from('roles' as any)
-          .select('*')
-          .order('created_at', { ascending: true });
-
-        if (directError) throw directError;
-        
-        const formattedRoles: Role[] = rolesData?.map((role: any) => ({
-          id: role.id,
-          name: role.name,
-          description: role.description || '',
-          permissions: role.permissions,
-          isSystemRole: role.is_system_role,
-          createdDate: new Date(role.created_at).toISOString().split('T')[0],
-          updatedDate: new Date(role.updated_at).toISOString().split('T')[0]
-        })) || [];
-
-        setRoles(formattedRoles);
+        console.error('Error fetching roles:', error);
+        // Set default roles as fallback
+        setRoles([
+          {
+            id: '1',
+            name: 'Admin',
+            description: 'Full system access',
+            permissions: { 
+              ...defaultPermissions,
+              canManageUsers: true, 
+              canManageRoles: true,
+              canCreateCases: true,
+              canEditAllCases: true,
+              canDeleteCases: true,
+              canViewAllCases: true,
+              canViewReports: true,
+              canManageSettings: true
+            },
+            isSystemRole: true,
+            createdDate: new Date().toISOString().split('T')[0],
+            updatedDate: new Date().toISOString().split('T')[0]
+          },
+          {
+            id: '2',
+            name: 'Lawyer',
+            description: 'Legal professional access',
+            permissions: { 
+              ...defaultPermissions,
+              canCreateCases: true, 
+              canViewAllCases: true,
+              canViewReports: true
+            },
+            isSystemRole: true,
+            createdDate: new Date().toISOString().split('T')[0],
+            updatedDate: new Date().toISOString().split('T')[0]
+          },
+          {
+            id: '3',
+            name: 'Paralegal',
+            description: 'Legal assistant access',
+            permissions: { 
+              ...defaultPermissions,
+              canCreateCases: true
+            },
+            isSystemRole: true,
+            createdDate: new Date().toISOString().split('T')[0],
+            updatedDate: new Date().toISOString().split('T')[0]
+          }
+        ]);
         return;
       }
 
       if (data) {
-        setRoles(data);
+        const formattedRoles: Role[] = data.map((role: any) => ({
+          id: role.id,
+          name: role.name,
+          description: role.description || '',
+          permissions: role.permissions || defaultPermissions,
+          isSystemRole: role.is_system_role,
+          createdDate: new Date(role.created_at).toISOString().split('T')[0],
+          updatedDate: new Date(role.updated_at).toISOString().split('T')[0]
+        }));
+
+        setRoles(formattedRoles);
       }
     } catch (err) {
       console.error('Error fetching roles:', err);
@@ -50,25 +92,17 @@ export function useRoles() {
           id: '1',
           name: 'Admin',
           description: 'Full system access',
-          permissions: { canManageUsers: true, canManageRoles: true },
-          isSystemRole: true,
-          createdDate: new Date().toISOString().split('T')[0],
-          updatedDate: new Date().toISOString().split('T')[0]
-        },
-        {
-          id: '2',
-          name: 'Lawyer',
-          description: 'Legal professional access',
-          permissions: { canCreateCases: true, canViewAllCases: true },
-          isSystemRole: true,
-          createdDate: new Date().toISOString().split('T')[0],
-          updatedDate: new Date().toISOString().split('T')[0]
-        },
-        {
-          id: '3',
-          name: 'Paralegal',
-          description: 'Legal assistant access',
-          permissions: { canCreateCases: true },
+          permissions: { 
+            ...defaultPermissions,
+            canManageUsers: true, 
+            canManageRoles: true,
+            canCreateCases: true,
+            canEditAllCases: true,
+            canDeleteCases: true,
+            canViewAllCases: true,
+            canViewReports: true,
+            canManageSettings: true
+          },
           isSystemRole: true,
           createdDate: new Date().toISOString().split('T')[0],
           updatedDate: new Date().toISOString().split('T')[0]

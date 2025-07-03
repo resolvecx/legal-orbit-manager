@@ -11,13 +11,10 @@ export function useUsers() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      // Use raw query since app_users table is not in generated types yet
+      // Direct query to app_users table
       const { data, error } = await supabase
         .from('app_users' as any)
-        .select(`
-          *,
-          roles!inner(id, name)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -50,19 +47,21 @@ export function useUsers() {
         return;
       }
 
-      const formattedUsers: User[] = data?.map((user: any) => ({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        roleId: user.role_id,
-        department: user.department,
-        phone: user.phone,
-        status: user.status,
-        createdDate: new Date(user.created_at).toISOString().split('T')[0],
-        lastLogin: user.last_login
-      })) || [];
+      if (data) {
+        const formattedUsers: User[] = data.map((user: any) => ({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          roleId: user.role_id,
+          department: user.department,
+          phone: user.phone,
+          status: user.status,
+          createdDate: new Date(user.created_at).toISOString().split('T')[0],
+          lastLogin: user.last_login
+        }));
 
-      setUsers(formattedUsers);
+        setUsers(formattedUsers);
+      }
     } catch (err) {
       console.error('Error fetching users:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch users');
