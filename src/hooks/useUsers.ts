@@ -11,7 +11,6 @@ export function useUsers() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      // Direct query to app_users table
       const { data, error } = await supabase
         .from('app_users' as any)
         .select('*')
@@ -19,31 +18,8 @@ export function useUsers() {
 
       if (error) {
         console.error('Error fetching users:', error);
-        // Set mock data as fallback
-        setUsers([
-          {
-            id: '1',
-            name: 'John Smith',
-            email: 'john.smith@lawfirm.com',
-            roleId: '1',
-            department: 'Administration',
-            phone: '+1 (555) 123-4567',
-            status: 'Active',
-            createdDate: '2024-06-11',
-            lastLogin: '2024-06-11T10:30:00Z'
-          },
-          {
-            id: '2',
-            name: 'Sarah Johnson',
-            email: 'sarah.johnson@lawfirm.com',
-            roleId: '2',
-            department: 'Litigation',
-            phone: '+1 (555) 234-5678',
-            status: 'Active',
-            createdDate: '2024-06-11',
-            lastLogin: '2024-06-11T09:15:00Z'
-          }
-        ]);
+        setError(error.message);
+        setUsers([]);
         return;
       }
 
@@ -65,6 +41,7 @@ export function useUsers() {
     } catch (err) {
       console.error('Error fetching users:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch users');
+      setUsers([]);
     } finally {
       setLoading(false);
     }

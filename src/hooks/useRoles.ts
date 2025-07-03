@@ -11,7 +11,6 @@ export function useRoles() {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      // Direct query to roles table
       const { data, error } = await supabase
         .from('roles' as any)
         .select('*')
@@ -19,54 +18,8 @@ export function useRoles() {
 
       if (error) {
         console.error('Error fetching roles:', error);
-        // Set default roles as fallback
-        setRoles([
-          {
-            id: '1',
-            name: 'Admin',
-            description: 'Full system access',
-            permissions: { 
-              ...defaultPermissions,
-              canManageUsers: true, 
-              canManageRoles: true,
-              canCreateCases: true,
-              canEditAllCases: true,
-              canDeleteCases: true,
-              canViewAllCases: true,
-              canViewReports: true,
-              canManageSettings: true
-            },
-            isSystemRole: true,
-            createdDate: new Date().toISOString().split('T')[0],
-            updatedDate: new Date().toISOString().split('T')[0]
-          },
-          {
-            id: '2',
-            name: 'Lawyer',
-            description: 'Legal professional access',
-            permissions: { 
-              ...defaultPermissions,
-              canCreateCases: true, 
-              canViewAllCases: true,
-              canViewReports: true
-            },
-            isSystemRole: true,
-            createdDate: new Date().toISOString().split('T')[0],
-            updatedDate: new Date().toISOString().split('T')[0]
-          },
-          {
-            id: '3',
-            name: 'Paralegal',
-            description: 'Legal assistant access',
-            permissions: { 
-              ...defaultPermissions,
-              canCreateCases: true
-            },
-            isSystemRole: true,
-            createdDate: new Date().toISOString().split('T')[0],
-            updatedDate: new Date().toISOString().split('T')[0]
-          }
-        ]);
+        setError(error.message);
+        setRoles([]);
         return;
       }
 
@@ -86,28 +39,7 @@ export function useRoles() {
     } catch (err) {
       console.error('Error fetching roles:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch roles');
-      // Set default roles as fallback
-      setRoles([
-        {
-          id: '1',
-          name: 'Admin',
-          description: 'Full system access',
-          permissions: { 
-            ...defaultPermissions,
-            canManageUsers: true, 
-            canManageRoles: true,
-            canCreateCases: true,
-            canEditAllCases: true,
-            canDeleteCases: true,
-            canViewAllCases: true,
-            canViewReports: true,
-            canManageSettings: true
-          },
-          isSystemRole: true,
-          createdDate: new Date().toISOString().split('T')[0],
-          updatedDate: new Date().toISOString().split('T')[0]
-        }
-      ]);
+      setRoles([]);
     } finally {
       setLoading(false);
     }
