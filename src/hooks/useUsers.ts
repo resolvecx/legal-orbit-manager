@@ -11,7 +11,7 @@ export function useUsers() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('app_users')
         .select('*')
         .order('created_at', { ascending: false });
@@ -24,7 +24,7 @@ export function useUsers() {
       }
 
       if (data) {
-        const formattedUsers: User[] = (data as any[]).map((user: any) => ({
+        const formattedUsers: User[] = data.map((user) => ({
           id: user.id,
           name: user.name,
           email: user.email,
@@ -49,7 +49,7 @@ export function useUsers() {
 
   const createUser = async (userData: Omit<User, "id" | "createdDate">) => {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('app_users')
         .insert({
           name: userData.name,
@@ -66,15 +66,15 @@ export function useUsers() {
       if (error) throw error;
 
       const newUser: User = {
-        id: (data as any).id,
-        name: (data as any).name,
-        email: (data as any).email,
-        roleId: (data as any).role_id,
-        department: (data as any).department,
-        phone: (data as any).phone,
-        status: (data as any).status,
-        createdDate: new Date((data as any).created_at).toISOString().split('T')[0],
-        lastLogin: (data as any).last_login
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        roleId: data.role_id,
+        department: data.department,
+        phone: data.phone,
+        status: data.status,
+        createdDate: new Date(data.created_at).toISOString().split('T')[0],
+        lastLogin: data.last_login
       };
 
       setUsers(prev => [newUser, ...prev]);
@@ -87,7 +87,7 @@ export function useUsers() {
 
   const updateUser = async (userId: string, userData: Omit<User, "id" | "createdDate">) => {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('app_users')
         .update({
           name: userData.name,
@@ -106,15 +106,15 @@ export function useUsers() {
       if (error) throw error;
 
       const updatedUser: User = {
-        id: (data as any).id,
-        name: (data as any).name,
-        email: (data as any).email,
-        roleId: (data as any).role_id,
-        department: (data as any).department,
-        phone: (data as any).phone,
-        status: (data as any).status,
-        createdDate: new Date((data as any).created_at).toISOString().split('T')[0],
-        lastLogin: (data as any).last_login
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        roleId: data.role_id,
+        department: data.department,
+        phone: data.phone,
+        status: data.status,
+        createdDate: new Date(data.created_at).toISOString().split('T')[0],
+        lastLogin: data.last_login
       };
 
       setUsers(prev => prev.map(user => user.id === userId ? updatedUser : user));
@@ -127,7 +127,7 @@ export function useUsers() {
 
   const deleteUser = async (userId: string) => {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('app_users')
         .delete()
         .eq('id', userId);

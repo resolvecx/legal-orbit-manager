@@ -11,7 +11,7 @@ export function useRoles() {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('roles')
         .select('*')
         .order('created_at', { ascending: true });
@@ -24,7 +24,7 @@ export function useRoles() {
       }
 
       if (data) {
-        const formattedRoles: Role[] = (data as any[]).map((role: any) => ({
+        const formattedRoles: Role[] = data.map((role) => ({
           id: role.id,
           name: role.name,
           description: role.description || '',
@@ -47,7 +47,7 @@ export function useRoles() {
 
   const createRole = async (roleData: Omit<Role, "id" | "createdDate" | "updatedDate">) => {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('roles')
         .insert({
           name: roleData.name,
@@ -61,13 +61,13 @@ export function useRoles() {
       if (error) throw error;
 
       const newRole: Role = {
-        id: (data as any).id,
-        name: (data as any).name,
-        description: (data as any).description || '',
-        permissions: (data as any).permissions,
-        isSystemRole: (data as any).is_system_role,
-        createdDate: new Date((data as any).created_at).toISOString().split('T')[0],
-        updatedDate: new Date((data as any).updated_at).toISOString().split('T')[0]
+        id: data.id,
+        name: data.name,
+        description: data.description || '',
+        permissions: data.permissions,
+        isSystemRole: data.is_system_role,
+        createdDate: new Date(data.created_at).toISOString().split('T')[0],
+        updatedDate: new Date(data.updated_at).toISOString().split('T')[0]
       };
 
       setRoles(prev => [...prev, newRole]);
@@ -80,7 +80,7 @@ export function useRoles() {
 
   const updateRole = async (roleId: string, roleData: Omit<Role, "id" | "createdDate" | "updatedDate">) => {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('roles')
         .update({
           name: roleData.name,
@@ -96,13 +96,13 @@ export function useRoles() {
       if (error) throw error;
 
       const updatedRole: Role = {
-        id: (data as any).id,
-        name: (data as any).name,
-        description: (data as any).description || '',
-        permissions: (data as any).permissions,
-        isSystemRole: (data as any).is_system_role,
-        createdDate: new Date((data as any).created_at).toISOString().split('T')[0],
-        updatedDate: new Date((data as any).updated_at).toISOString().split('T')[0]
+        id: data.id,
+        name: data.name,
+        description: data.description || '',
+        permissions: data.permissions,
+        isSystemRole: data.is_system_role,
+        createdDate: new Date(data.created_at).toISOString().split('T')[0],
+        updatedDate: new Date(data.updated_at).toISOString().split('T')[0]
       };
 
       setRoles(prev => prev.map(role => role.id === roleId ? updatedRole : role));
@@ -115,7 +115,7 @@ export function useRoles() {
 
   const deleteRole = async (roleId: string) => {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('roles')
         .delete()
         .eq('id', roleId);
