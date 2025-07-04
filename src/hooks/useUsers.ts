@@ -12,7 +12,7 @@ export function useUsers() {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('app_users')
+        .from('app_users' as any)
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -24,7 +24,7 @@ export function useUsers() {
       }
 
       if (data) {
-        const formattedUsers: User[] = data.map((user) => ({
+        const formattedUsers: User[] = data.map((user: any) => ({
           id: user.id,
           name: user.name,
           email: user.email,
@@ -50,7 +50,7 @@ export function useUsers() {
   const createUser = async (userData: Omit<User, "id" | "createdDate">) => {
     try {
       const { data, error } = await supabase
-        .from('app_users')
+        .from('app_users' as any)
         .insert({
           name: userData.name,
           email: userData.email,
@@ -88,7 +88,7 @@ export function useUsers() {
   const updateUser = async (userId: string, userData: Omit<User, "id" | "createdDate">) => {
     try {
       const { data, error } = await supabase
-        .from('app_users')
+        .from('app_users' as any)
         .update({
           name: userData.name,
           email: userData.email,
@@ -128,7 +128,7 @@ export function useUsers() {
   const deleteUser = async (userId: string) => {
     try {
       const { error } = await supabase
-        .from('app_users')
+        .from('app_users' as any)
         .delete()
         .eq('id', userId);
 

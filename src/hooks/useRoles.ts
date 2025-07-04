@@ -12,7 +12,7 @@ export function useRoles() {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('roles')
+        .from('roles' as any)
         .select('*')
         .order('created_at', { ascending: true });
 
@@ -24,7 +24,7 @@ export function useRoles() {
       }
 
       if (data) {
-        const formattedRoles: Role[] = data.map((role) => ({
+        const formattedRoles: Role[] = data.map((role: any) => ({
           id: role.id,
           name: role.name,
           description: role.description || '',
@@ -48,7 +48,7 @@ export function useRoles() {
   const createRole = async (roleData: Omit<Role, "id" | "createdDate" | "updatedDate">) => {
     try {
       const { data, error } = await supabase
-        .from('roles')
+        .from('roles' as any)
         .insert({
           name: roleData.name,
           description: roleData.description,
@@ -81,7 +81,7 @@ export function useRoles() {
   const updateRole = async (roleId: string, roleData: Omit<Role, "id" | "createdDate" | "updatedDate">) => {
     try {
       const { data, error } = await supabase
-        .from('roles')
+        .from('roles' as any)
         .update({
           name: roleData.name,
           description: roleData.description,
@@ -116,7 +116,7 @@ export function useRoles() {
   const deleteRole = async (roleId: string) => {
     try {
       const { error } = await supabase
-        .from('roles')
+        .from('roles' as any)
         .delete()
         .eq('id', roleId);
 
