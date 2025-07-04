@@ -11,7 +11,7 @@ export function useRoles() {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('roles')
         .select('*')
         .order('created_at', { ascending: true });
@@ -47,7 +47,7 @@ export function useRoles() {
 
   const createRole = async (roleData: Omit<Role, "id" | "createdDate" | "updatedDate">) => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('roles')
         .insert({
           name: roleData.name,
@@ -80,7 +80,7 @@ export function useRoles() {
 
   const updateRole = async (roleId: string, roleData: Omit<Role, "id" | "createdDate" | "updatedDate">) => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('roles')
         .update({
           name: roleData.name,
@@ -115,7 +115,7 @@ export function useRoles() {
 
   const deleteRole = async (roleId: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('roles')
         .delete()
         .eq('id', roleId);
