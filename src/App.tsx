@@ -12,6 +12,7 @@ import Users from "./pages/Users";
 import Roles from "./pages/Roles";
 import Customers from "./pages/Customers";
 import Workspaces from "./pages/Workspaces";
+import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -54,6 +55,11 @@ const App = () => (
             <Route path="/workspaces" element={
               <ProtectedRoute>
                 <Workspaces />
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <Settings />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

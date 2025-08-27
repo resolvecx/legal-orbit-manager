@@ -65,20 +65,23 @@ export function useUsers() {
 
       if (error) throw error;
 
-      const newUser: User = {
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        roleId: data.role_id,
-        department: data.department,
-        phone: data.phone,
-        status: data.status,
-        createdDate: new Date(data.created_at).toISOString().split('T')[0],
-        lastLogin: data.last_login
-      };
+      if (data) {
+        const userData = data as any;
+        const newUser: User = {
+          id: userData.id,
+          name: userData.name,
+          email: userData.email,
+          roleId: userData.role_id,
+          department: userData.department,
+          phone: userData.phone,
+          status: userData.status,
+          createdDate: new Date(userData.created_at).toISOString().split('T')[0],
+          lastLogin: userData.last_login
+        };
 
-      setUsers(prev => [newUser, ...prev]);
-      return { success: true };
+        setUsers(prev => [newUser, ...prev]);
+        return { success: true };
+      }
     } catch (err) {
       console.error('Error creating user:', err);
       return { success: false, error: err instanceof Error ? err.message : 'Failed to create user' };
@@ -105,20 +108,23 @@ export function useUsers() {
 
       if (error) throw error;
 
-      const updatedUser: User = {
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        roleId: data.role_id,
-        department: data.department,
-        phone: data.phone,
-        status: data.status,
-        createdDate: new Date(data.created_at).toISOString().split('T')[0],
-        lastLogin: data.last_login
-      };
+      if (data) {
+        const userData = data as any;
+        const updatedUser: User = {
+          id: userData.id,
+          name: userData.name,
+          email: userData.email,
+          roleId: userData.role_id,
+          department: userData.department,
+          phone: userData.phone,
+          status: userData.status,
+          createdDate: new Date(userData.created_at).toISOString().split('T')[0],
+          lastLogin: userData.last_login
+        };
 
-      setUsers(prev => prev.map(user => user.id === userId ? updatedUser : user));
-      return { success: true };
+        setUsers(prev => prev.map(user => user.id === userId ? updatedUser : user));
+        return { success: true };
+      }
     } catch (err) {
       console.error('Error updating user:', err);
       return { success: false, error: err instanceof Error ? err.message : 'Failed to update user' };

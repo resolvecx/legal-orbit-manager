@@ -60,18 +60,21 @@ export function useRoles() {
 
       if (error) throw error;
 
-      const newRole: Role = {
-        id: data.id,
-        name: data.name,
-        description: data.description || '',
-        permissions: data.permissions,
-        isSystemRole: data.is_system_role,
-        createdDate: new Date(data.created_at).toISOString().split('T')[0],
-        updatedDate: new Date(data.updated_at).toISOString().split('T')[0]
-      };
+      if (data) {
+        const roleData = data as any;
+        const newRole: Role = {
+          id: roleData.id,
+          name: roleData.name,
+          description: roleData.description || '',
+          permissions: roleData.permissions,
+          isSystemRole: roleData.is_system_role,
+          createdDate: new Date(roleData.created_at).toISOString().split('T')[0],
+          updatedDate: new Date(roleData.updated_at).toISOString().split('T')[0]
+        };
 
-      setRoles(prev => [...prev, newRole]);
-      return { success: true };
+        setRoles(prev => [...prev, newRole]);
+        return { success: true };
+      }
     } catch (err) {
       console.error('Error creating role:', err);
       return { success: false, error: err instanceof Error ? err.message : 'Failed to create role' };
@@ -95,18 +98,21 @@ export function useRoles() {
 
       if (error) throw error;
 
-      const updatedRole: Role = {
-        id: data.id,
-        name: data.name,
-        description: data.description || '',
-        permissions: data.permissions,
-        isSystemRole: data.is_system_role,
-        createdDate: new Date(data.created_at).toISOString().split('T')[0],
-        updatedDate: new Date(data.updated_at).toISOString().split('T')[0]
-      };
+      if (data) {
+        const roleData = data as any;
+        const updatedRole: Role = {
+          id: roleData.id,
+          name: roleData.name,
+          description: roleData.description || '',
+          permissions: roleData.permissions,
+          isSystemRole: roleData.is_system_role,
+          createdDate: new Date(roleData.created_at).toISOString().split('T')[0],
+          updatedDate: new Date(roleData.updated_at).toISOString().split('T')[0]
+        };
 
-      setRoles(prev => prev.map(role => role.id === roleId ? updatedRole : role));
-      return { success: true };
+        setRoles(prev => prev.map(role => role.id === roleId ? updatedRole : role));
+        return { success: true };
+      }
     } catch (err) {
       console.error('Error updating role:', err);
       return { success: false, error: err instanceof Error ? err.message : 'Failed to update role' };
