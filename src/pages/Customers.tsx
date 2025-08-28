@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -8,9 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CustomerForm } from "@/components/CustomerForm";
 import { Customer } from "@/types/customer";
-import { SupabaseCustomer, CustomerFormData } from "@/types/supabase-customer";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useCustomers } from "@/hooks/useCustomers";
 import { 
   Plus, 
   Search, 
@@ -31,71 +29,12 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 const Customers = () => {
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const { customers, loading, createCustomer, updateCustomer, deleteCustomer } = useCustomers();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { user } = useAuth();
-
-  const convertSupabaseToCustomer = (supabaseCustomer: any): Customer => ({
-    id: supabaseCustomer.id,
-    name: supabaseCustomer.name,
-    email: supabaseCustomer.email,
-    phone: supabaseCustomer.phone,
-    company: supabaseCustomer.company,
-    address: supabaseCustomer.address,
-    city: supabaseCustomer.city,
-    state: supabaseCustomer.state,
-    zipCode: supabaseCustomer.zip_code,
-    status: supabaseCustomer.status as 'Active' | 'Inactive' | 'Prospect',
-    customerType: supabaseCustomer.customer_type as 'Individual' | 'Business',
-    assignedLawyer: supabaseCustomer.assigned_lawyer,
-    notes: supabaseCustomer.notes,
-    createdDate: supabaseCustomer.created_date,
-    lastContact: supabaseCustomer.last_contact
-  });
-
-  const fetchCustomers = async () => {
-    if (!user) return;
-    
-    try {
-      console.log('Fetching customers for user:', user.id);
-      const { data, error } = await supabase
-        .from('customers')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching customers:', error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch customers",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log('Fetched customers:', data);
-      const convertedCustomers = data.map(convertSupabaseToCustomer);
-      setCustomers(convertedCustomers);
-    } catch (error) {
-      console.error('Exception fetching customers:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (user) {
-      fetchCustomers();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
 
   const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -104,143 +43,90 @@ const Customers = () => {
   );
 
   const handleCreateCustomer = async (customerData: Omit<Customer, "id" | "createdDate">) => {
-    if (!user) return;
-
     try {
-      console.log('Creating customer:', customerData);
-      const supabaseData = {
-        user_id: user.id,
-        name: customerData.name,
-        email: customerData.email,
-        phone: customerData.phone || null,
-        company: customerData.company || null,
-        address: customerData.address || null,
-        city: customerData.city || null,
-        state: customerData.state || null,
-        zip_code: customerData.zipCode || null,
-        status: customerData.status,
-        customer_type: customerData.customerType,
-        assigned_lawyer: customerData.assignedLawyer || null,
-        notes: customerData.notes || null,
-        last_contact: customerData.lastContact || null
-      };
+      const result = await createCustomer(customerData);
 
-      const { data, error } = await supabase
-        .from('customers')
-        .insert([supabaseData])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating customer:', error);
+      if (result.success) {
+        setIsFormOpen(false);
+        toast({
+          title: "Success",
+          description: "Customer created successfully",
+        });
+      } else {
         toast({
           title: "Error",
-          description: "Failed to create customer",
+          description: result.error || "Failed to create customer",
           variant: "destructive",
         });
-        return;
       }
-
-      console.log('Created customer:', data);
-      const newCustomer = convertSupabaseToCustomer(data);
-      setCustomers([newCustomer, ...customers]);
-      setIsFormOpen(false);
-      toast({
-        title: "Customer created",
-        description: "The customer has been successfully created.",
-      });
     } catch (error) {
       console.error('Exception creating customer:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
     }
   };
 
   const handleUpdateCustomer = async (customerData: Omit<Customer, "id" | "createdDate">) => {
-    if (!selectedCustomer || !user) return;
+    if (!selectedCustomer) return;
     
     try {
-      console.log('Updating customer:', selectedCustomer.id, customerData);
-      const supabaseData = {
-        name: customerData.name,
-        email: customerData.email,
-        phone: customerData.phone || null,
-        company: customerData.company || null,
-        address: customerData.address || null,
-        city: customerData.city || null,
-        state: customerData.state || null,
-        zip_code: customerData.zipCode || null,
-        status: customerData.status,
-        customer_type: customerData.customerType,
-        assigned_lawyer: customerData.assignedLawyer || null,
-        notes: customerData.notes || null,
-        last_contact: customerData.lastContact || null,
-        updated_at: new Date().toISOString()
-      };
+      const result = await updateCustomer(selectedCustomer.id, customerData);
 
-      const { data, error } = await supabase
-        .from('customers')
-        .update(supabaseData)
-        .eq('id', selectedCustomer.id)
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating customer:', error);
+      if (result.success) {
+        setSelectedCustomer(null);
+        setIsFormOpen(false);
+        setIsEditing(false);
+        toast({
+          title: "Success",
+          description: "Customer updated successfully",
+        });
+      } else {
         toast({
           title: "Error",
-          description: "Failed to update customer",
+          description: result.error || "Failed to update customer",
           variant: "destructive",
         });
-        return;
       }
-
-      console.log('Updated customer:', data);
-      const updatedCustomer = convertSupabaseToCustomer(data);
-      setCustomers(customers.map(customer =>
-        customer.id === selectedCustomer.id ? updatedCustomer : customer
-      ));
-      setSelectedCustomer(null);
-      setIsFormOpen(false);
-      setIsEditing(false);
-      toast({
-        title: "Customer updated",
-        description: "The customer has been successfully updated.",
-      });
     } catch (error) {
       console.error('Exception updating customer:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
     }
   };
 
   const handleDeleteCustomer = async (customerId: string) => {
-    if (!user) return;
+    if (!confirm("Are you sure you want to delete this customer?")) {
+      return;
+    }
 
     try {
-      console.log('Deleting customer:', customerId);
-      const { error } = await supabase
-        .from('customers')
-        .delete()
-        .eq('id', customerId)
-        .eq('user_id', user.id);
+      const result = await deleteCustomer(customerId);
 
-      if (error) {
-        console.error('Error deleting customer:', error);
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Customer deleted successfully",
+        });
+      } else {
         toast({
           title: "Error",
-          description: "Failed to delete customer",
+          description: result.error || "Failed to delete customer",
           variant: "destructive",
         });
-        return;
       }
-
-      console.log('Deleted customer:', customerId);
-      setCustomers(customers.filter(customer => customer.id !== customerId));
-      toast({
-        title: "Customer deleted",
-        description: "The customer has been successfully deleted.",
-        variant: "destructive",
-      });
     } catch (error) {
       console.error('Exception deleting customer:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
     }
   };
 

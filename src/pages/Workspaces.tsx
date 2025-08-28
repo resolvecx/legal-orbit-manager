@@ -1,83 +1,58 @@
-
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
 import { WorkspaceForm } from "@/components/WorkspaceForm";
 import { WorkspaceCard } from "@/components/WorkspaceCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import type { Workspace } from "@/types/workspace";
+
+interface Workspace {
+  id: string;
+  name: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 const Workspaces = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const queryClient = useQueryClient();
-
-  const { data: workspaces, isLoading } = useQuery({
-    queryKey: ['workspaces'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('workspaces')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as Workspace[];
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([
+    {
+      id: "1",
+      name: "Legal Department",
+      description: "Main workspace for legal team collaboration",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    },
+    {
+      id: "2",
+      name: "Client Relations", 
+      description: "Workspace for managing client communications",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     }
-  });
-
-  const createMutation = useMutation({
-    mutationFn: async (workspace: { name: string; description?: string }) => {
-      const { data, error } = await supabase
-        .from('workspaces')
-        .insert(workspace)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
-      setIsCreateDialogOpen(false);
-      toast.success("Workspace created successfully");
-    },
-    onError: (error) => {
-      toast.error("Failed to create workspace");
-      console.error('Error creating workspace:', error);
-    }
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('workspaces')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
-      toast.success("Workspace deleted successfully");
-    },
-    onError: (error) => {
-      toast.error("Failed to delete workspace");
-      console.error('Error deleting workspace:', error);
-    }
-  });
+  ]);
 
   const handleCreate = (data: { name: string; description?: string }) => {
-    createMutation.mutate(data);
+    const newWorkspace: Workspace = {
+      id: `workspace-${Date.now()}`,
+      ...data,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    setWorkspaces(prev => [newWorkspace, ...prev]);
+    setIsCreateDialogOpen(false);
+    toast.success("Workspace created successfully");
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this workspace? This will also remove all members.")) {
-      deleteMutation.mutate(id);
+    if (confirm("Are you sure you want to delete this workspace?")) {
+      setWorkspaces(prev => prev.filter(w => w.id !== id));
+      toast.success("Workspace deleted successfully");
     }
   };
 
@@ -105,28 +80,12 @@ const Workspaces = () => {
                 <WorkspaceForm 
                   onSubmit={handleCreate}
                   onCancel={() => setIsCreateDialogOpen(false)}
-                  isLoading={createMutation.isPending}
                 />
               </DialogContent>
             </Dialog>
           </div>
 
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <Card key={i} className="animate-pulse">
-                  <CardHeader>
-                    <div className="h-6 bg-muted rounded w-3/4"></div>
-                    <div className="h-4 bg-muted rounded w-1/2"></div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-4 bg-muted rounded w-full mb-2"></div>
-                    <div className="h-4 bg-muted rounded w-2/3"></div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : workspaces && workspaces.length > 0 ? (
+          {workspaces.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {workspaces.map((workspace) => (
                 <WorkspaceCard 
@@ -158,7 +117,6 @@ const Workspaces = () => {
                     <WorkspaceForm 
                       onSubmit={handleCreate}
                       onCancel={() => setIsCreateDialogOpen(false)}
-                      isLoading={createMutation.isPending}
                     />
                   </DialogContent>
                 </Dialog>

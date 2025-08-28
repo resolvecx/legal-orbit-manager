@@ -1,7 +1,63 @@
-
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Role, defaultPermissions } from '@/types/role';
+
+// Mock data
+const mockRoles: Role[] = [
+  {
+    id: 'admin',
+    name: 'Administrator',
+    description: 'Full access to all system features',
+    permissions: {
+      canCreateCases: true,
+      canEditAllCases: true,
+      canDeleteCases: true,
+      canViewAllCases: true,
+      canManageUsers: true,
+      canViewReports: true,
+      canManageSettings: true,
+      canManageRoles: true,
+    },
+    isSystemRole: true,
+    createdDate: '2024-01-01',
+    updatedDate: '2024-01-01'
+  },
+  {
+    id: 'manager',
+    name: 'Manager',
+    description: 'Can manage cases and view reports',
+    permissions: {
+      canCreateCases: true,
+      canEditAllCases: true,
+      canDeleteCases: false,
+      canViewAllCases: true,
+      canManageUsers: false,
+      canViewReports: true,
+      canManageSettings: false,
+      canManageRoles: false,
+    },
+    isSystemRole: false,
+    createdDate: '2024-01-01',
+    updatedDate: '2024-01-01'
+  },
+  {
+    id: 'user',
+    name: 'User',
+    description: 'Basic access to create and view own cases',
+    permissions: {
+      canCreateCases: true,
+      canEditAllCases: false,
+      canDeleteCases: false,
+      canViewAllCases: false,
+      canManageUsers: false,
+      canViewReports: false,
+      canManageSettings: false,
+      canManageRoles: false,
+    },
+    isSystemRole: false,
+    createdDate: '2024-01-01',
+    updatedDate: '2024-01-01'
+  }
+];
 
 export function useRoles() {
   const [roles, setRoles] = useState<Role[]>([]);
@@ -11,31 +67,10 @@ export function useRoles() {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('roles' as any)
-        .select('*')
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching roles:', error);
-        setError(error.message);
-        setRoles([]);
-        return;
-      }
-
-      if (data) {
-        const formattedRoles: Role[] = data.map((role: any) => ({
-          id: role.id,
-          name: role.name,
-          description: role.description || '',
-          permissions: role.permissions || defaultPermissions,
-          isSystemRole: role.is_system_role,
-          createdDate: new Date(role.created_at).toISOString().split('T')[0],
-          updatedDate: new Date(role.updated_at).toISOString().split('T')[0]
-        }));
-
-        setRoles(formattedRoles);
-      }
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setRoles([...mockRoles]);
+      setError(null);
     } catch (err) {
       console.error('Error fetching roles:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch roles');
@@ -47,34 +82,15 @@ export function useRoles() {
 
   const createRole = async (roleData: Omit<Role, "id" | "createdDate" | "updatedDate">) => {
     try {
-      const { data, error } = await supabase
-        .from('roles' as any)
-        .insert({
-          name: roleData.name,
-          description: roleData.description,
-          permissions: roleData.permissions,
-          is_system_role: roleData.isSystemRole
-        })
-        .select()
-        .single();
+      const newRole: Role = {
+        ...roleData,
+        id: `role-${Date.now()}`,
+        createdDate: new Date().toISOString().split('T')[0],
+        updatedDate: new Date().toISOString().split('T')[0]
+      };
 
-      if (error) throw error;
-
-      if (data) {
-        const roleData = data as any;
-        const newRole: Role = {
-          id: roleData.id,
-          name: roleData.name,
-          description: roleData.description || '',
-          permissions: roleData.permissions,
-          isSystemRole: roleData.is_system_role,
-          createdDate: new Date(roleData.created_at).toISOString().split('T')[0],
-          updatedDate: new Date(roleData.updated_at).toISOString().split('T')[0]
-        };
-
-        setRoles(prev => [...prev, newRole]);
-        return { success: true };
-      }
+      setRoles(prev => [...prev, newRole]);
+      return { success: true };
     } catch (err) {
       console.error('Error creating role:', err);
       return { success: false, error: err instanceof Error ? err.message : 'Failed to create role' };
@@ -83,36 +99,16 @@ export function useRoles() {
 
   const updateRole = async (roleId: string, roleData: Omit<Role, "id" | "createdDate" | "updatedDate">) => {
     try {
-      const { data, error } = await supabase
-        .from('roles' as any)
-        .update({
-          name: roleData.name,
-          description: roleData.description,
-          permissions: roleData.permissions,
-          is_system_role: roleData.isSystemRole,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', roleId)
-        .select()
-        .single();
+      const existingRole = roles.find(r => r.id === roleId);
+      const updatedRole: Role = {
+        ...roleData,
+        id: roleId,
+        createdDate: existingRole?.createdDate || new Date().toISOString().split('T')[0],
+        updatedDate: new Date().toISOString().split('T')[0]
+      };
 
-      if (error) throw error;
-
-      if (data) {
-        const roleData = data as any;
-        const updatedRole: Role = {
-          id: roleData.id,
-          name: roleData.name,
-          description: roleData.description || '',
-          permissions: roleData.permissions,
-          isSystemRole: roleData.is_system_role,
-          createdDate: new Date(roleData.created_at).toISOString().split('T')[0],
-          updatedDate: new Date(roleData.updated_at).toISOString().split('T')[0]
-        };
-
-        setRoles(prev => prev.map(role => role.id === roleId ? updatedRole : role));
-        return { success: true };
-      }
+      setRoles(prev => prev.map(role => role.id === roleId ? updatedRole : role));
+      return { success: true };
     } catch (err) {
       console.error('Error updating role:', err);
       return { success: false, error: err instanceof Error ? err.message : 'Failed to update role' };
@@ -121,13 +117,6 @@ export function useRoles() {
 
   const deleteRole = async (roleId: string) => {
     try {
-      const { error } = await supabase
-        .from('roles' as any)
-        .delete()
-        .eq('id', roleId);
-
-      if (error) throw error;
-
       setRoles(prev => prev.filter(role => role.id !== roleId));
       return { success: true };
     } catch (err) {

@@ -1,17 +1,19 @@
-
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useState } from "react";
 import { UserPlus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { User } from "@/types/user";
-import type { WorkspaceMember } from "@/types/workspace";
+
+interface WorkspaceMember {
+  id: string;
+  workspace_id: string;
+  user_id: string;
+  role: string;
+  joined_at: string;
+}
 
 interface WorkspaceMembersManagerProps {
   workspaceId: string;
@@ -21,94 +23,45 @@ interface WorkspaceMembersManagerProps {
 export const WorkspaceMembersManager = ({ workspaceId, workspaceName }: WorkspaceMembersManagerProps) => {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedRole, setSelectedRole] = useState("member");
-  const queryClient = useQueryClient();
+  const [members, setMembers] = useState<WorkspaceMember[]>([
+    { id: "1", workspace_id: workspaceId, user_id: "1", role: "admin", joined_at: new Date().toISOString() },
+    { id: "2", workspace_id: workspaceId, user_id: "2", role: "member", joined_at: new Date().toISOString() }
+  ]);
 
-  // Mock users data - in a real app, this would come from your users table
-  const mockUsers: User[] = [
-    { id: "1", name: "John Doe", email: "john@example.com", roleId: "1", department: "Legal", status: "Active", createdDate: "2024-01-01" },
-    { id: "2", name: "Jane Smith", email: "jane@example.com", roleId: "2", department: "HR", status: "Active", createdDate: "2024-01-02" },
-    { id: "3", name: "Bob Johnson", email: "bob@example.com", roleId: "1", department: "Legal", status: "Active", createdDate: "2024-01-03" },
-    { id: "4", name: "Alice Wilson", email: "alice@example.com", roleId: "3", department: "IT", status: "Active", createdDate: "2024-01-04" },
+  const mockUsers = [
+    { id: "1", name: "John Doe", email: "john@example.com" },
+    { id: "2", name: "Jane Smith", email: "jane@example.com" },
+    { id: "3", name: "Bob Johnson", email: "bob@example.com" },
+    { id: "4", name: "Alice Wilson", email: "alice@example.com" },
   ];
-
-  const { data: members, isLoading } = useQuery({
-    queryKey: ['workspace-members', workspaceId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('workspace_members')
-        .select('*')
-        .eq('workspace_id', workspaceId);
-      
-      if (error) throw error;
-      return data as WorkspaceMember[];
-    }
-  });
-
-  const addMemberMutation = useMutation({
-    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      const { data, error } = await supabase
-        .from('workspace_members')
-        .insert({
-          workspace_id: workspaceId,
-          user_id: userId,
-          role: role
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
-      setSelectedUserId("");
-      setSelectedRole("member");
-      toast.success("Member added successfully");
-    },
-    onError: (error: any) => {
-      if (error.code === '23505') {
-        toast.error("User is already a member of this workspace");
-      } else {
-        toast.error("Failed to add member");
-      }
-      console.error('Error adding member:', error);
-    }
-  });
-
-  const removeMemberMutation = useMutation({
-    mutationFn: async (memberId: string) => {
-      const { error } = await supabase
-        .from('workspace_members')
-        .delete()
-        .eq('id', memberId);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
-      toast.success("Member removed successfully");
-    },
-    onError: (error) => {
-      toast.error("Failed to remove member");
-      console.error('Error removing member:', error);
-    }
-  });
 
   const handleAddMember = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUserId) return;
     
-    addMemberMutation.mutate({ userId: selectedUserId, role: selectedRole });
+    const newMember: WorkspaceMember = {
+      id: `member-${Date.now()}`,
+      workspace_id: workspaceId,
+      user_id: selectedUserId,
+      role: selectedRole,
+      joined_at: new Date().toISOString()
+    };
+    
+    setMembers(prev => [...prev, newMember]);
+    setSelectedUserId("");
+    setSelectedRole("member");
+    toast.success("Member added successfully");
   };
 
   const handleRemoveMember = (memberId: string) => {
-    if (confirm("Are you sure you want to remove this member from the workspace?")) {
-      removeMemberMutation.mutate(memberId);
+    if (confirm("Are you sure you want to remove this member?")) {
+      setMembers(prev => prev.filter(m => m.id !== memberId));
+      toast.success("Member removed successfully");
     }
   };
 
   const availableUsers = mockUsers.filter(user => 
-    !members?.some(member => member.user_id === user.id)
+    !members.some(member => member.user_id === user.id)
   );
 
   const getMemberDetails = (userId: string) => {
@@ -154,11 +107,8 @@ export const WorkspaceMembersManager = ({ workspaceId, workspaceName }: Workspac
                 </SelectContent>
               </Select>
             </div>
-            <Button 
-              type="submit" 
-              disabled={!selectedUserId || addMemberMutation.isPending}
-            >
-              {addMemberMutation.isPending ? "Adding..." : "Add Member"}
+            <Button type="submit" disabled={!selectedUserId}>
+              Add Member
             </Button>
           </form>
         </CardContent>
@@ -169,9 +119,7 @@ export const WorkspaceMembersManager = ({ workspaceId, workspaceName }: Workspac
           <CardTitle>Current Members</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="text-center py-4">Loading members...</div>
-          ) : members && members.length > 0 ? (
+          {members.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>

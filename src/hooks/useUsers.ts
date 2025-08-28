@@ -1,7 +1,42 @@
-
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/user';
+
+// Mock data
+const mockUsers: User[] = [
+  {
+    id: '1',
+    name: 'John Doe',
+    email: 'john.doe@example.com',
+    roleId: 'admin',
+    department: 'Legal',
+    phone: '555-0123',
+    status: 'Active',
+    createdDate: '2024-01-15',
+    lastLogin: '2024-01-20'
+  },
+  {
+    id: '2',
+    name: 'Jane Smith',
+    email: 'jane.smith@example.com',
+    roleId: 'manager',
+    department: 'Operations',
+    phone: '555-0124',
+    status: 'Active',
+    createdDate: '2024-01-10',
+    lastLogin: '2024-01-19'
+  },
+  {
+    id: '3',
+    name: 'Mike Johnson',
+    email: 'mike.johnson@example.com',
+    roleId: 'user',
+    department: 'Support',
+    phone: '555-0125',
+    status: 'Inactive',
+    createdDate: '2024-01-05',
+    lastLogin: '2024-01-18'
+  }
+];
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
@@ -11,33 +46,10 @@ export function useUsers() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('app_users' as any)
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching users:', error);
-        setError(error.message);
-        setUsers([]);
-        return;
-      }
-
-      if (data) {
-        const formattedUsers: User[] = data.map((user: any) => ({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          roleId: user.role_id,
-          department: user.department,
-          phone: user.phone,
-          status: user.status,
-          createdDate: new Date(user.created_at).toISOString().split('T')[0],
-          lastLogin: user.last_login
-        }));
-
-        setUsers(formattedUsers);
-      }
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setUsers([...mockUsers]);
+      setError(null);
     } catch (err) {
       console.error('Error fetching users:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch users');
@@ -49,39 +61,14 @@ export function useUsers() {
 
   const createUser = async (userData: Omit<User, "id" | "createdDate">) => {
     try {
-      const { data, error } = await supabase
-        .from('app_users' as any)
-        .insert({
-          name: userData.name,
-          email: userData.email,
-          role_id: userData.roleId,
-          department: userData.department,
-          phone: userData.phone,
-          status: userData.status,
-          last_login: userData.lastLogin
-        })
-        .select()
-        .single();
+      const newUser: User = {
+        ...userData,
+        id: `user-${Date.now()}`,
+        createdDate: new Date().toISOString().split('T')[0]
+      };
 
-      if (error) throw error;
-
-      if (data) {
-        const userData = data as any;
-        const newUser: User = {
-          id: userData.id,
-          name: userData.name,
-          email: userData.email,
-          roleId: userData.role_id,
-          department: userData.department,
-          phone: userData.phone,
-          status: userData.status,
-          createdDate: new Date(userData.created_at).toISOString().split('T')[0],
-          lastLogin: userData.last_login
-        };
-
-        setUsers(prev => [newUser, ...prev]);
-        return { success: true };
-      }
+      setUsers(prev => [newUser, ...prev]);
+      return { success: true };
     } catch (err) {
       console.error('Error creating user:', err);
       return { success: false, error: err instanceof Error ? err.message : 'Failed to create user' };
@@ -90,41 +77,14 @@ export function useUsers() {
 
   const updateUser = async (userId: string, userData: Omit<User, "id" | "createdDate">) => {
     try {
-      const { data, error } = await supabase
-        .from('app_users' as any)
-        .update({
-          name: userData.name,
-          email: userData.email,
-          role_id: userData.roleId,
-          department: userData.department,
-          phone: userData.phone,
-          status: userData.status,
-          last_login: userData.lastLogin,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId)
-        .select()
-        .single();
+      const updatedUser: User = {
+        ...userData,
+        id: userId,
+        createdDate: users.find(u => u.id === userId)?.createdDate || new Date().toISOString().split('T')[0]
+      };
 
-      if (error) throw error;
-
-      if (data) {
-        const userData = data as any;
-        const updatedUser: User = {
-          id: userData.id,
-          name: userData.name,
-          email: userData.email,
-          roleId: userData.role_id,
-          department: userData.department,
-          phone: userData.phone,
-          status: userData.status,
-          createdDate: new Date(userData.created_at).toISOString().split('T')[0],
-          lastLogin: userData.last_login
-        };
-
-        setUsers(prev => prev.map(user => user.id === userId ? updatedUser : user));
-        return { success: true };
-      }
+      setUsers(prev => prev.map(user => user.id === userId ? updatedUser : user));
+      return { success: true };
     } catch (err) {
       console.error('Error updating user:', err);
       return { success: false, error: err instanceof Error ? err.message : 'Failed to update user' };
@@ -133,13 +93,6 @@ export function useUsers() {
 
   const deleteUser = async (userId: string) => {
     try {
-      const { error } = await supabase
-        .from('app_users' as any)
-        .delete()
-        .eq('id', userId);
-
-      if (error) throw error;
-
       setUsers(prev => prev.filter(user => user.id !== userId));
       return { success: true };
     } catch (err) {

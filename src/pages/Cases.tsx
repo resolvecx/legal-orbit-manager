@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -10,87 +10,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search, Filter, Plus, Eye, Edit2, Trash2 } from "lucide-react";
 import { CaseForm } from "@/components/CaseForm";
 import { CaseDetails } from "@/components/CaseDetails";
-import { SupabaseCase } from "@/types/supabase-case";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useCases, Case } from "@/hooks/useCases";
 import { useToast } from "@/hooks/use-toast";
 
-interface Case {
-  id: string;
-  title: string;
-  client: string;
-  status: "Open" | "In Progress" | "Pending" | "Closed";
-  priority: "Low" | "Medium" | "High" | "Critical";
-  assignedTo: string;
-  createdDate: string;
-  dueDate: string;
-  type: string;
-  description: string;
-}
-
 const Cases = () => {
-  const [cases, setCases] = useState<Case[]>([]);
+  const { cases, loading, createCase, updateCase, deleteCase } = useCases();
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCase, setEditingCase] = useState<Case | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [view, setView] = useState<"list" | "details">("list");
-  const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
   const { toast } = useToast();
-
-  const convertSupabaseToCase = (supabaseCase: any): Case => ({
-    id: supabaseCase.id,
-    title: supabaseCase.title,
-    client: supabaseCase.client,
-    status: supabaseCase.status as "Open" | "In Progress" | "Pending" | "Closed",
-    priority: supabaseCase.priority as "Low" | "Medium" | "High" | "Critical",
-    assignedTo: supabaseCase.assigned_to,
-    createdDate: supabaseCase.created_date,
-    dueDate: supabaseCase.due_date,
-    type: supabaseCase.type,
-    description: supabaseCase.description || ''
-  });
-
-  const fetchCases = async () => {
-    if (!user) return;
-    
-    try {
-      console.log('Fetching cases for user:', user.id);
-      const { data, error } = await supabase
-        .from('cases')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching cases:', error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch cases",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log('Fetched cases:', data);
-      const convertedCases = data.map(convertSupabaseToCase);
-      setCases(convertedCases);
-    } catch (error) {
-      console.error('Exception fetching cases:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (user) {
-      fetchCases();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -120,141 +51,108 @@ const Cases = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const generateCaseId = () => {
-    const timestamp = Date.now().toString().slice(-6);
-    return `CASE-${timestamp}`;
-  };
-
-  const handleCreateCase = async (caseData: Omit<Case, "id" | "createdDate">) => {
-    if (!user) return;
-
+  const handleSubmit = async (formData: any) => {
     try {
-      const caseId = generateCaseId();
-      console.log('Creating case:', caseId, caseData);
-      
-      const supabaseData = {
-        id: caseId,
-        user_id: user.id,
-        title: caseData.title,
-        client: caseData.client,
-        status: caseData.status,
-        priority: caseData.priority,
-        assigned_to: caseData.assignedTo,
-        due_date: caseData.dueDate,
-        type: caseData.type,
-        description: caseData.description || null
-      };
+      const result = await createCase({
+        title: formData.title,
+        client: formData.client,
+        status: formData.status,
+        priority: formData.priority,
+        assignedTo: formData.assignedTo,
+        dueDate: formData.dueDate,
+        type: formData.type,
+        description: formData.description
+      });
 
-      const { data, error } = await supabase
-        .from('cases')
-        .insert([supabaseData])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating case:', error);
+      if (result.success) {
+        setIsFormOpen(false);
+        toast({
+          title: "Success",
+          description: "Case created successfully",
+        });
+      } else {
         toast({
           title: "Error",
-          description: "Failed to create case",
+          description: result.error || "Failed to create case",
           variant: "destructive",
         });
-        return;
       }
-
-      console.log('Created case:', data);
-      const newCase = convertSupabaseToCase(data);
-      setCases([newCase, ...cases]);
-      setIsFormOpen(false);
-      toast({
-        title: "Case created",
-        description: "The case has been successfully created.",
-      });
     } catch (error) {
       console.error('Exception creating case:', error);
-    }
-  };
-
-  const handleEditCase = async (caseData: Omit<Case, "id" | "createdDate">) => {
-    if (!editingCase || !user) return;
-    
-    try {
-      console.log('Updating case:', editingCase.id, caseData);
-      const supabaseData = {
-        title: caseData.title,
-        client: caseData.client,
-        status: caseData.status,
-        priority: caseData.priority,
-        assigned_to: caseData.assignedTo,
-        due_date: caseData.dueDate,
-        type: caseData.type,
-        description: caseData.description || null,
-        updated_at: new Date().toISOString()
-      };
-
-      const { data, error } = await supabase
-        .from('cases')
-        .update(supabaseData)
-        .eq('id', editingCase.id)
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating case:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update case",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log('Updated case:', data);
-      const updatedCase = convertSupabaseToCase(data);
-      setCases(cases.map(c => 
-        c.id === editingCase.id ? updatedCase : c
-      ));
-      setEditingCase(null);
-      setIsFormOpen(false);
       toast({
-        title: "Case updated",
-        description: "The case has been successfully updated.",
-      });
-    } catch (error) {
-      console.error('Exception updating case:', error);
-    }
-  };
-
-  const handleDeleteCase = async (caseId: string) => {
-    if (!user) return;
-
-    try {
-      console.log('Deleting case:', caseId);
-      const { error } = await supabase
-        .from('cases')
-        .delete()
-        .eq('id', caseId)
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error deleting case:', error);
-        toast({
-          title: "Error",
-          description: "Failed to delete case",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log('Deleted case:', caseId);
-      setCases(cases.filter(c => c.id !== caseId));
-      toast({
-        title: "Case deleted",
-        description: "The case has been successfully deleted.",
+        title: "Error",
+        description: "An unexpected error occurred",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleUpdate = async (formData: any) => {
+    if (!editingCase) return;
+
+    try {
+      const result = await updateCase(editingCase.id, {
+        title: formData.title,
+        client: formData.client,
+        status: formData.status,
+        priority: formData.priority,
+        assignedTo: formData.assignedTo,
+        dueDate: formData.dueDate,
+        type: formData.type,
+        description: formData.description
+      });
+
+      if (result.success) {
+        setIsFormOpen(false);
+        setEditingCase(null);
+        toast({
+          title: "Success",
+          description: "Case updated successfully",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to update case",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Exception updating case:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async (caseId: string) => {
+    if (!confirm("Are you sure you want to delete this case?")) {
+      return;
+    }
+
+    try {
+      const result = await deleteCase(caseId);
+
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Case deleted successfully",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to delete case",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error('Exception deleting case:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
     }
   };
 
@@ -419,7 +317,7 @@ const Cases = () => {
                               <Button 
                                 variant="ghost" 
                                 size="sm"
-                                onClick={() => handleDeleteCase(case_item.id)}
+                                onClick={() => handleDelete(case_item.id)}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -448,7 +346,7 @@ const Cases = () => {
           {isFormOpen && (
             <CaseForm 
               case_item={editingCase}
-              onSubmit={editingCase ? handleEditCase : handleCreateCase}
+              onSubmit={editingCase ? handleUpdate : handleSubmit}
               onCancel={() => {
                 setIsFormOpen(false);
                 setEditingCase(null);
