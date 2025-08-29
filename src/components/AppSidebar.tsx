@@ -7,7 +7,8 @@ import {
   Plus,
   UserCheck,
   Settings,
-  Building2
+  Building2,
+  Mail
 } from "lucide-react";
 
 import {
@@ -29,6 +30,11 @@ const menuItems = [
     title: "Dashboard",
     url: "/",
     icon: Home,
+  },
+  {
+    title: "Inbox", 
+    url: "/inbox",
+    icon: Mail,
   },
   {
     title: "Cases",

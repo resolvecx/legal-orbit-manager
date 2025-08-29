@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
+import Inbox from "./pages/Inbox"; 
 import Cases from "./pages/Cases";
 import Users from "./pages/Users";
 import Roles from "./pages/Roles";
@@ -26,6 +27,11 @@ const App = () => (
             <Route path="/" element={
               <ProtectedRoute>
                 <Index />
+              </ProtectedRoute>
+            } />
+            <Route path="/inbox" element={
+              <ProtectedRoute>
+                <Inbox />
               </ProtectedRoute>
             } />
             <Route path="/cases" element={
