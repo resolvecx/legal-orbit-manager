@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { 
   Search, 
   Filter, 
@@ -190,6 +191,7 @@ const mockPreviousCases: PreviousCase[] = [
 ];
 
 const Inbox = () => {
+  const navigate = useNavigate();
   const [selectedConversation, setSelectedConversation] = useState<Conversation>(mockConversations[0]);
   const [messageInput, setMessageInput] = useState("");
   const [activeChannel, setActiveChannel] = useState<"Email" | "WhatsApp" | "Live Chat">("Email");
@@ -228,7 +230,10 @@ const Inbox = () => {
       <div className="w-80 border-r border-border bg-card flex flex-col">
         <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between mb-4">
-            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+            <ArrowLeft 
+              className="w-5 h-5 text-muted-foreground cursor-pointer hover:text-foreground" 
+              onClick={() => navigate('/')}
+            />
             <h2 className="text-lg font-semibold">Inbox</h2>  
             <Filter className="w-5 h-5 text-muted-foreground" />
           </div>
