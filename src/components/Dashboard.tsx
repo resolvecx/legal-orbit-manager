@@ -258,130 +258,72 @@ export function Dashboard() {
           </Card>
         </div>
         
-        <div className="grid gap-6 lg:grid-cols-4">
-          {/* Charts Section */}
-          <div className="lg:col-span-3 space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Cases Progress Overview - Last 07 Days</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Bar dataKey="active" fill="#3b82f6" />
-                      <Bar dataKey="resolved" fill="#10b981" />
-                      <Bar dataKey="overdue" fill="#ef4444" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+        {/* Second Row: Charts and Quick Actions */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Bar Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Cases Progress Overview - Last 07 Days</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Bar dataKey="active" fill="#3b82f6" />
+                  <Bar dataKey="resolved" fill="#10b981" />
+                  <Bar dataKey="overdue" fill="#ef4444" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Cases By Channels</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-center">
-                    <ResponsiveContainer width="100%" height={200}>
-                      <PieChart>
-                        <Pie
-                          data={pieData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {pieData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="mt-4 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                        <span className="text-sm">Email</span>
-                      </div>
-                      <span className="text-sm font-medium">12</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                        <span className="text-sm">Web Forms</span>
-                      </div>
-                      <span className="text-sm font-medium">50</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Recent Cases Table */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Recent Cases</CardTitle>
-                  <Button variant="outline" size="sm">
-                    View All
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Case ID</th>
-                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Title</th>
-                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Reported By</th>
-                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Status</th>
-                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Priority</th>
-                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Assignee</th>
-                        <th className="text-left p-3 text-sm font-medium text-muted-foreground">Last Updated</th>
-                        <th className="text-left p-3 text-sm font-medium text-muted-foreground"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentCases.map((case_item) => (
-                        <tr key={case_item.caseId} className="border-b hover:bg-muted/50">
-                          <td className="p-3 text-sm font-medium">{case_item.caseId}</td>
-                          <td className="p-3 text-sm">{case_item.title}</td>
-                          <td className="p-3 text-sm">{case_item.reportedBy}</td>
-                          <td className="p-3">
-                            <Badge className={`text-xs ${case_item.statusColor}`}>
-                              {case_item.status}
-                            </Badge>
-                          </td>
-                          <td className="p-3">
-                            <Badge className={`text-xs ${case_item.priorityColor}`}>
-                              {case_item.priority}
-                            </Badge>
-                          </td>
-                          <td className="p-3 text-sm">{case_item.assignee}</td>
-                          <td className="p-3 text-sm text-muted-foreground">{case_item.lastUpdated}</td>
-                          <td className="p-3">
-                            <Button variant="ghost" size="sm">
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          </td>
-                        </tr>
+          {/* Donut Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Cases By Channels</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-center">
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
-                    </tbody>
-                  </table>
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span className="text-sm">Email</span>
+                  </div>
+                  <span className="text-sm font-medium">12</span>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                    <span className="text-sm">Web Forms</span>
+                  </div>
+                  <span className="text-sm font-medium">50</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* Quick Actions Sidebar */}
+          {/* Quick Actions */}
           <Card>
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
@@ -390,26 +332,78 @@ export function Dashboard() {
               <Button className="w-full justify-start" variant="outline">
                 <UserPlus className="w-4 h-4 mr-2" />
                 Integrate Channel
-                <span className="ml-auto text-xs text-muted-foreground">Add communication channels</span>
               </Button>
               <Button className="w-full justify-start" variant="outline">
                 <UserPlus className="w-4 h-4 mr-2" />
                 Add New Customer
-                <span className="ml-auto text-xs text-muted-foreground">Create new profiles</span>
               </Button>
               <Button className="w-full justify-start" variant="outline">
                 <TicketPlus className="w-4 h-4 mr-2" />
                 Create Ticket
-                <span className="ml-auto text-xs text-muted-foreground">Help client with an issue</span>
               </Button>
               <Button className="w-full justify-start" variant="outline">
                 <BarChart3 className="w-4 h-4 mr-2" />
                 View Analytics
-                <span className="ml-auto text-xs text-muted-foreground">Performance data</span>
               </Button>
             </CardContent>
           </Card>
         </div>
+
+        {/* Third Row: Recent Cases Table */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Recent Cases</CardTitle>
+              <Button variant="outline" size="sm">
+                View All
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Case ID</th>
+                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Title</th>
+                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Reported By</th>
+                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Status</th>
+                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Priority</th>
+                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Assignee</th>
+                    <th className="text-left p-3 text-sm font-medium text-muted-foreground">Last Updated</th>
+                    <th className="text-left p-3 text-sm font-medium text-muted-foreground"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentCases.map((case_item) => (
+                    <tr key={case_item.caseId} className="border-b hover:bg-muted/50">
+                      <td className="p-3 text-sm font-medium">{case_item.caseId}</td>
+                      <td className="p-3 text-sm">{case_item.title}</td>
+                      <td className="p-3 text-sm">{case_item.reportedBy}</td>
+                      <td className="p-3">
+                        <Badge className={`text-xs ${case_item.statusColor}`}>
+                          {case_item.status}
+                        </Badge>
+                      </td>
+                      <td className="p-3">
+                        <Badge className={`text-xs ${case_item.priorityColor}`}>
+                          {case_item.priority}
+                        </Badge>
+                      </td>
+                      <td className="p-3 text-sm">{case_item.assignee}</td>
+                      <td className="p-3 text-sm text-muted-foreground">{case_item.lastUpdated}</td>
+                      <td className="p-3">
+                        <Button variant="ghost" size="sm">
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
