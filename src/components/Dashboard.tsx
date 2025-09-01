@@ -259,9 +259,9 @@ export function Dashboard() {
         </div>
         
         {/* Second Row: Charts and Quick Actions */}
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Bar Chart */}
-          <Card>
+        <div className="grid gap-6 lg:grid-cols-12">
+          {/* Bar Chart - Takes half space (6/12) */}
+          <Card className="lg:col-span-6">
             <CardHeader>
               <CardTitle>Cases Progress Overview - Last 07 Days</CardTitle>
             </CardHeader>
@@ -279,8 +279,8 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Donut Chart */}
-          <Card>
+          {/* Donut Chart - Takes quarter space (3/12) */}
+          <Card className="lg:col-span-3">
             <CardHeader>
               <CardTitle>Cases By Channels</CardTitle>
             </CardHeader>
@@ -323,8 +323,8 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
-          <Card>
+          {/* Quick Actions - Takes quarter space (3/12) */}
+          <Card className="lg:col-span-3">
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
