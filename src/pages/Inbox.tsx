@@ -209,11 +209,36 @@ const Inbox = () => {
 
   const getChannelIcon = (channel: string) => {
     switch (channel) {
-      case "Email": return <span className="text-xs">📧</span>;
-      case "WhatsApp": return <span className="text-xs">💬</span>;
-      case "Live Chat": return <span className="text-xs">🔵</span>;
-      case "Facebook Messenger": return <span className="text-xs">💬</span>;
-      default: return <span className="text-xs">📧</span>;
+      case "Email": return (
+        <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+          <span>📧</span>
+          <span>Email</span>
+        </div>
+      );
+      case "WhatsApp": return (
+        <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+          <span>💬</span>
+          <span>WhatsApp</span>
+        </div>
+      );
+      case "Live Chat": return (
+        <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
+          <span>🔵</span>
+          <span>Live Chat</span>
+        </div>
+      );
+      case "Facebook Messenger": return (
+        <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+          <span>💬</span>
+          <span>Messenger</span>
+        </div>
+      );
+      default: return (
+        <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
+          <span>📧</span>
+          <span>Email</span>
+        </div>
+      );
     }
   };
 
