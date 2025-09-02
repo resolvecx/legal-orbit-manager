@@ -335,10 +335,7 @@ const Inbox = () => {
                 <h3 className="font-medium">{selectedConversation.name}</h3>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <span>{selectedConversation.email}</span>
-                  <Badge variant="outline" className="text-xs px-2">
-                    {getChannelIcon(selectedConversation.channel)}
-                    <span className="ml-1">{selectedConversation.channel}</span>
-                  </Badge>
+                  {getChannelIcon(selectedConversation.channel)}
                 </div>
               </div>
             </div>
