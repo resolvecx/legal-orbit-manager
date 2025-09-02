@@ -318,32 +318,39 @@ const Inbox = () => {
         {/* Message Input */}
         <div className="p-4 border-t border-border bg-card">
           <div className="flex items-center gap-2 mb-3">
-            <Button variant={activeChannel === "Email" ? "default" : "outline"} size="sm" onClick={() => setActiveChannel("Email")}>
-              
+            <Button variant={activeChannel === "Email" ? "default" : "ghost"} size="sm" onClick={() => setActiveChannel("Email")} className="text-xs">
               Email
             </Button>
-            <Button variant={activeChannel === "WhatsApp" ? "default" : "outline"} size="sm" onClick={() => setActiveChannel("WhatsApp")}>
-              
+            <Button variant={activeChannel === "WhatsApp" ? "default" : "ghost"} size="sm" onClick={() => setActiveChannel("WhatsApp")} className="text-xs">
               WhatsApp
             </Button>
-            <Button variant={activeChannel === "Live Chat" ? "default" : "outline"} size="sm" onClick={() => setActiveChannel("Live Chat")}>
+            <Button variant={activeChannel === "Live Chat" ? "default" : "ghost"} size="sm" onClick={() => setActiveChannel("Live Chat")} className="text-xs">
               <MessageSquare className="w-3 h-3 mr-1" />
               Live Chat
             </Button>
           </div>
-          <div className="flex items-end gap-2">
-            <div className="flex-1 border border-border rounded-lg p-3">
-              <Input placeholder="Type your message..." value={messageInput} onChange={e => setMessageInput(e.target.value)} className="border-0 p-0 focus-visible:ring-0" />
+          <div className="border border-border rounded-lg p-4 min-h-[120px] flex flex-col">
+            <div className="flex-1 mb-3">
+              <Input 
+                placeholder="Type your message..." 
+                value={messageInput} 
+                onChange={e => setMessageInput(e.target.value)} 
+                className="border-0 p-0 focus-visible:ring-0 text-base min-h-[80px]" 
+              />
             </div>
-            <Button variant="ghost" size="sm">
-              <Paperclip className="w-4 h-4" />
-            </Button>
-            <div className="flex gap-1">
-              <Button size="sm" className="px-3">Save Draft</Button>
-              <Button size="sm" className="px-3">
-                <Send className="w-4 h-4 mr-1" />
-                Send
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Paperclip className="w-4 h-4" />
               </Button>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" className="text-xs px-3 h-8">
+                  Save Draft
+                </Button>
+                <Button size="sm" className="text-xs px-3 h-8">
+                  <Send className="w-3 h-3 mr-1" />
+                  Send
+                </Button>
+              </div>
             </div>
           </div>
         </div>
