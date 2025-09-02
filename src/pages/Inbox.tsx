@@ -5,6 +5,7 @@ import {
   Filter, 
   Mail, 
   MessageSquare, 
+  MessageCircle,
   Phone, 
   MoreHorizontal,
   Paperclip,
@@ -208,10 +209,10 @@ const Inbox = () => {
 
   const getChannelIcon = (channel: string) => {
     switch (channel) {
-      case "Email": return <Mail className="w-3 h-3" />;
-      case "WhatsApp": return <MessageSquare className="w-3 h-3" />;
-      case "Live Chat": return <MessageSquare className="w-3 h-3" />;
-      default: return <Mail className="w-3 h-3" />;
+      case "Email": return <Mail className="w-3 h-3 text-blue-600" />;
+      case "WhatsApp": return <MessageCircle className="w-3 h-3 text-green-500" />;
+      case "Live Chat": return <MessageSquare className="w-3 h-3 text-purple-500" />;
+      default: return <Mail className="w-3 h-3 text-blue-600" />;
     }
   };
 
